@@ -36,6 +36,8 @@ def main(outstem_gc, raw_counts):
     nread_per_window = counts.sum(axis = 1)
     mapped_reads = counts.sum(axis = 0)
     mapped_reads_fraction = mapped_reads.div(mapped_reads.sum())
+    assert mapped_reads_fraction.values[0] < 1
+    assert mapped_reads_fraction.values[0] > 0
     print('========Fraction mapped reads: \n ========',mapped_reads_fraction)
 
     if component_alpha.shape[1]>1:
@@ -117,7 +119,7 @@ def main(outstem_gc, raw_counts):
         results['enriched']=(results['qvalue']<FDR_cutoff)
 
     enriched_windows = results.loc[results['enriched']]
-    print(f'Finish testing, found enriched_windows: ', enriched_windows.shape[0])
+    print(f'Finish testing, found enriched_windows: ', enriched_windows.shape[0], 'out of ', results.shape[0])
 
     return results, metadata
 
@@ -131,12 +133,12 @@ if __name__=='__main__':
     control_col = sys.argv[5]
     outdir = basedir
 
-    # basedir=Path('/home/hsher/scratch/SLBP_gc_aware')
+    # basedir=Path('/tscc/nfs/home/hsher/scratch/SLBP_gc_aware')
     # outstem='K562_SLBP_rep1.SLBP'
     # exp, rbp = outstem.split('.')
-    # raw_counts = pd.read_csv(f'/home/hsher/scratch/ABC_singleplex_SLBP/counts_external/genome/eCLIP_SLBP_SMInput/K562_SLBP.SLBP.tsv.gz', sep = '\t')
-    # annotation_df = pd.read_csv('/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz', sep = '\t')
-    # outdir = Path('/home/hsher/scratch/beta_test')
+    # raw_counts = pd.read_csv(f'/tscc/nfs/home/hsher/scratch/ABC_singleplex_SLBP/counts_external/genome/eCLIP_SLBP_SMInput/K562_SLBP.SLBP.tsv.gz', sep = '\t')
+    # annotation_df = pd.read_csv('/tscc/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz', sep = '\t')
+    # outdir = Path('/tscc/nfs/home/hsher/scratch/beta_test')
     # control_col = 'external.eCLIP_SLBP_SMInput'
 
     # constants
@@ -164,7 +166,9 @@ if __name__=='__main__':
 
     # analysis
     print(results['enriched'].value_counts())
-    fcount = results.groupby(by = 'enriched')['feature_type_top'].value_counts().unstack().fillna(0).T
+    fcount = pd.pivot_table(results, index = 'feature_type_top', columns = 'enriched', aggfunc = 'size').fillna(0)
+    print(fcount)
+    #fcount = results.groupby(by = 'enriched')['feature_type_top'].value_counts().unstack().fillna(0).T
     fcount['Positive rate'] = fcount[True]/(fcount[True]+fcount[False])
     fcount.to_csv(outdir / f'{outstem}.feature_type_summary.tsv', sep = '\t')
 

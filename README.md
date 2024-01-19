@@ -1,45 +1,41 @@
-# oligoCLIP: Antibody barcoded eCLIP(ABC) processing pipeline from fastq.gz to windows and motifs
-- [original ABC paper](https://www.nature.com/articles/s41592-022-01708-8): use `snakeABC_SE.smk`
+# Mudskipper: Multiplex CLIP processing pipeline from fastq.gz to binding sites and motifs
+- [Link to original ABC paper](https://www.nature.com/articles/s41592-022-01708-8): use `snakeABC_SE.smk`
 - Yeolab paired-end protocol: use `snakeOligoCLIP_PE.smk`
 
 # Installation
-- You need to have Snakemake:
-    - snakemake instructions [here](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html)
-        - install snakemake 7.3.8 from this yaml file `rules/envs/snakemake.yaml`
-    - Yeolab internal users: `module load snakemake/7.3.8`
+- Snakemake 7.3.8:  [Snakemake Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html)
+    - install snakemake 7.3.8 `rules/envs/snakemake.yaml`.
+    - Snakemake 8 has different command line options that will need modification in `--profile`
+- Singularity 3.11: [Singularity](https://docs.sylabs.io/guides/3.0/user-guide/build_a_container.html).
+    - If you are on a server, ask the sys admin to install it. Sometimes there are weird permission issue if you install on your own.
+    - Not recommended: [install via conda](https://anaconda.org/conda-forge/singularity)
 - Download this repository by `git clone https://github.com/YeoLab/Mudskipper.git`.
-- Download depending repository and modify config variables as follow: # TODO: containerize or make to snakemake hub
-    - Yeolab internal users don't need to.
-- Install skipper dependecies and modify the following config variables:`JAVA_PATH`,`UMICOLLAPSE_PATH`, `R_EXE`. # TODO: containerize
-    - follow [skipper instructions](https://github.com/YeoLab/skipper#prerequisites) to set up
-- Most dependencies are already specified in `rules/envs`. When running snakemake, using `--use-conda` should automatically install everything for you.
 
 
-# How to run.
-1. prepare `PATH_TO_YOUR_CONFIG`. See below and `config/preprocess_config/oligope_iter5.yaml`
-2. Run snakemake
-```
-snakemake -s snakeOligoCLIP_PE.smk \ 
-    -j 12 \
-    --cluster "qsub -l walltime={params.run_time} -l nodes=1:ppn={params.cores} -q home-yeo -e {params.error_out_file} -o {params.out_file}" \
-    --configfile PATH_TO_YOUR_CONFIG \
-    --use-conda \
-    --conda-prefix /home/hsher/snakeconda -npk
-```
-- `-s`: use `snakeOligoCLIP_PE.smk` if you did YeoLab internal pair-end protocol. use `snakeABC_SE.smk` if you did ABC
-- `--configfile`: yaml file to specify your inputs, including where are the fastqs, what are the barcode, what reference genome...etc.
-- the rest just snakemake command line options. [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
-- `-j`: number of jobs to run at a same time
-- `--cluster`: command to submit jobs to cluster. 
-- `--use-conda`: ask snakemake to install everything for you using conda
-- `--conda-prefix`: specify a fixed location to store conda envs to prevent snakemake installing them multiple times
-- `-n`: dry run.
-- `-k`: keep going even if something failed
-- `-p`: print out command
+# How to run. (Using ABC as an example)
+1. Download data from [SRA](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE205536) 
+2. Prepare config and manifest `PATH_TO_YOUR_CONFIG`. Example inputs:
+    - config file: `config/preprocess_config/oligose_k562.yaml`
+    - manifest: `config/fastq_csv/ABC_2rep.csv`
+    - barcode csv: `config/barcode_csv/ABC_barcode.csv`
+3. Adjust profile for your cluster and computing resource:
+    - see profiles/tscc2 as an example
+    - for each option, [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
+4. Run snakemake
+    ```
+    snakemake -s snakeABC_SE.smk \
+        --configfile config/preprocess_config/oligose_k562_noalt_smalltest.yaml \
+        --profile profiles/tscc2 \
+        - n
+    ```
+    - `-s`: use `snakeOligoCLIP_PE.smk` if you did YeoLab internal pair-end protocol. use `snakeABC_SE.smk` if you did ABC
+    - `--configfile`: yaml file to specify your inputs, including where are the fastqs, what are the barcode, what reference genome...etc.
+    - `-n`: dry run.
+    - the rest of the options are in `--profile`. Adjust as needed. [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
 
-# Config
 
-## Basic Inputs:
+Follow the below sections to understand what to write in your config.
+# Options for Input files
 - Multiplex Example: 
     - Yeo lab internal pair-end protocol: `config/preprocess_config/oligope_iter5.yaml` 
     - ABC single-end protocol: `config/preprocess_config/ABC_2rep.yaml` 
@@ -47,7 +43,8 @@ snakemake -s snakeOligoCLIP_PE.smk \
     - ABC single-end protocol: `config/preprocess_config/oligose_single_rbfox2_hek.yaml`
     - Yeo lab internal paired-end protocol: /home/hsher/projects/oligoCLIP/config/preprocess_config/oligope_v5_nanos2.yaml
     - Process 1 type of singleplex per 1 manifest.
-### `MANIFEST`: a csv specifying fastq locations, replicates
+
+## `MANIFEST`: a csv specifying fastq locations, replicates
 - Example: 
     - Multiplex Example:
         - Yeo lab paired-end: `config/fastq_csv/katie_pe_iteration5.csv`
@@ -61,7 +58,8 @@ snakemake -s snakeOligoCLIP_PE.smk \
     - `fastq1`&`fastq2`: *.fastq.gz file for read1 and read 2
     - `libname`: unique names for each library. Should not contain space, special characters such as #,%,*
     - `experiment`: unique names for experiment. **Rows with the same `experiment` will be treated as replicates.** Should not contain space, special characters such as #,%,*
-### `barcode_csv`: specifying barcode sequencing per Antibody/RBP
+
+## `barcode_csv`: specifying barcode sequencing per Antibody/RBP
 - Example: `config/barcode_csv/iter5.csv`
 - Notebook to generate this file (Yeolab internal user): `utils/generate barcode-iter5.ipynb`
 - delimiter: `:`
@@ -71,7 +69,7 @@ snakemake -s snakeOligoCLIP_PE.smk \
         - ABC: read starts with this sequence.
     - 2nd column: Antibody/RBP name, Should not contain space, special characters such as #,%,*.
 
-### Outputs
+# Options to Control Output
 - `WORKDIR`: output directory
 - `RBP_TO_RUN_MOTIF`: list of RBP names to run motif analysis. Must be one of the rows in `barcode_csv`.
 - `run_clipper`: True if you want CLIPper outputs (works, but slow)
@@ -79,46 +77,43 @@ snakemake -s snakeOligoCLIP_PE.smk \
 - `run_comparison`: True if you want to run Piranha
 - debug: True if you want to debug. This tries to blast the unmapped reads.
 
-### Choosing backgrounds
+# Options to Choose Backgrounds
 By default if the below are left blank, we run Dirichlet Multinomial Mixture(DMM) for multiplex datasets, where RBPs are explicitly compared with each other. DMM is the best model for multiplex dataset. 
 
 Unfortunately, DMM doesn't work for singleplex. Calling singleplex binding sites require "external control" (see below). Otherwise it will just stop at the read counting stage.
 
 But if you want to add an background library, here is how to do:
-#### "Internal control": a barcode that measures the background. They are in the same `fastq.gz`
+
+## "Internal control": a barcode that measures the background. They are in the same `fastq.gz`
 - `AS_INPUT`: if you have a IgG antibody that everything will normalize against, type its name here. Must be one of the rows in `barcode_csv`. This can the background for skipper, CLIPper, and beta-binomial mixture model
-#### "External control": a library that is NOT in the same fastq as your oligoCLIP/ABC
+
+## "External control": a library that is NOT in the same fastq as your oligoCLIP/ABC
 - specify them in `external_bam` with name of the library (first line, ex `oligoCLIP_ctrlBead_rep2`), followed by  `file:` and `INFORMATIVE_READ`
-```
-# For example:
-oligoCLIP_ctrlBead_rep2:
-    file: /home/hsher/scratch/oligo_PE_iter7/1022-Rep2/bams/ctrlBead.rmDup.Aligned.sortedByCoord.out.bam
-    INFORMATIVE_READ: 1
-```
+    ```
+    # For example:
+    oligoCLIP_ctrlBead_rep2:
+        file: /home/hsher/scratch/oligo_PE_iter7/1022-Rep2/bams/ctrlBead.rmDup.Aligned.sortedByCoord.out.bam
+        INFORMATIVE_READ: 1
+    ```
 - This can be an eCLIP SMInput, total RNA-seq, IgG pull down from another experiment, bead control, spike-ins
 - these will also be used as a background in skipper, CLIPper and beta-binomial mixture model
 - the bams must be processed with the exact same STAR index as `STAR_DIR`, and is recommended to be processed with the same/similar mapping parameters as this repo or skipper.
 
 
-
-## Dependencies:
-- `SCRIPT_PATH`: Absolute path to `scripts` folder.
-- `JAVA_PATH`,`UMICOLLAPSE_PATH`, `R_EXE`: skipper dependencies. See `Installation`.
-
-## Preprocessing options:
+# Preprocessing Options:
 - `adaptor_fwd`,`adaptor_rev`: adapter sequence to trim. Do not include barcode
 - `tile_length`: we tile adapter sequences of this length so that indels don't mess up with trimming
 - `QUALITY_CUTOFF`: default 15. cutadapt params
 - `umi_length`: Length of unique molecular identifier (UMI).
 - `STAR_DIR`: directory to STAR index
 
-## Annotations:
+# Annotation Options:
 - skipper annotations: [follow skipper instructions](https://github.com/YeoLab/skipper#prerequisites) or generate with [skipper_utils](https://github.com/algaebrown/skipper_utils)
     - Yeolab internal users: Brian had all sorts of annotations here `/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/`.
 - `CHROM_SIZES`
 - `GENOMEFA`
 
-# Output Files
+# Output files
 ## Trimmed fastqs, bams, bigwigs:
 These are in the `EXPERIMENT_NAME` folders. For example, in your manifest.csv, there are two experiments, "GN_1019" and "GN_1020", then, under the `GN_1019/` folder you would see the following:
 1. `fastqs`: The trimmed and the demultiplexed fastqs.

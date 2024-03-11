@@ -61,6 +61,9 @@ def skipper_outputs():
         libname = libnames,
         sample_label = config['RBP_TO_RUN_MOTIF'],
         signal_type = ['CITS', 'COV']
+        )+expand("skipper_CC/enriched_re/{libname}.{sample_label}.enriched_re.tsv.gz",
+                 libname = libnames,
+                sample_label = list(set(rbps)-set(config['AS_INPUT']))
         )
     # normalize to external bams
     if external_normalization:
@@ -151,7 +154,15 @@ def DMN_outputs():
         libname = libnames,
         )+expand('mask/{libname}.repeat_mask.csv',
         libname = libnames,
+        )+expand("DMM_repeat/{repeat_type}/{libname}.{sample_label}.enriched_windows.tsv", 
+            sample_label = rbps, 
+            repeat_type = ['name'],
+            libname = libnames
+        )+expand("DMM_repeat/{repeat_type}/{libname}.megaoutputs.tsv",
+            libname = libnames,
+            repeat_type = ['name']
         )
+        
     
     return outputs
 

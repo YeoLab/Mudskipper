@@ -48,8 +48,14 @@ rule run_homer:
     benchmark: "benchmarks/run_homer/{libname}.{sample_label}.{signal_type}.{root_dir}.txt"
     shell:
         """
-        findMotifsGenome.pl <(zcat {input.finemapped_windows} | awk -v OFS=\"\t\" '{{print $4 \":\"$9,$1,$2+1,$3,$6}}') \
+        if [ -s {input.finemapped_windows} ]; then
+            findMotifsGenome.pl <(zcat {input.finemapped_windows} | awk -v OFS=\"\t\" '{{print $4 \":\"$9,$1,$2+1,$3,$6}}') \
             {input.genome} {params.outdir}/finemapped_results/{wildcards.signal_type}/{wildcards.libname}.{wildcards.sample_label} \
             -preparsedDir {params.outdir}/preparsed -size given -rna -nofacts -S 20 -len 5,6,7,8,9 -nlen 1 \
             -bg <(zcat {input.background} | awk -v OFS=\"\t\" '{{print $4,$1,$2+1,$3,$6}}') 
+        else
+            echo 'no finemapped windows found, skipping homer motif analysis' > {output.report}
+            echo 'no finemapped windows found, skipping homer motif analysis' > {output.motif}
+        fi
+        
         """

@@ -188,37 +188,39 @@ use rule CITS_bam_to_bedgraph from make_track as CITS_bedgraph with:
     input:
         bam="{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.bam"
     output:
-        pos="{libname}/bw/CITS/{sample_label}.pos.bedgraph",
-        neg="{libname}/bw/CITS/{sample_label}.neg.bedgraph"
+        pos=temp("{libname}/bw/CITS/{sample_label}.pos.bedgraph"),
+        neg=temp("{libname}/bw/CITS/{sample_label}.neg.bedgraph")
+
 use rule COV_bam_to_bedgraph from make_track as COV_bedgraph with:
     input:
         bam="{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.bam"
     output:
-        pos="{libname}/bw/COV/{sample_label}.pos.bedgraph",
-        neg="{libname}/bw/COV/{sample_label}.neg.bedgraph"
+        pos=temp("{libname}/bw/COV/{sample_label}.pos.bedgraph"),
+        neg=temp("{libname}/bw/COV/{sample_label}.neg.bedgraph")
 
 use rule CITS_bam_to_bedgraph from make_track as CITS_bedgraph_external with:
     input:
         bam=lambda wildcards: ancient(config['external_bam'][wildcards.external_label]['file'])
     output:
-        pos="external_bw/CITS/{external_label}.pos.bedgraph",
-        neg="external_bw/CITS/{external_label}.neg.bedgraph"
+        pos=temp("external_bw/CITS/{external_label}.pos.bedgraph"),
+        neg=temp("external_bw/CITS/{external_label}.neg.bedgraph")
     params:
         run_time="1:00:00",
-        error_out_file = "error_files/coverage_bedgraph",
+        error_out_file = "error_files/CIT_bedgraph.{external_label}",
         out_file = "stdout/CITS_bedgraph.{external_label}",
         cores = 1,
         memory = 40000,
+
 use rule COV_bam_to_bedgraph from make_track as COV_bedgraph_external with:
     input:
         bam=lambda wildcards: ancient(config['external_bam'][wildcards.external_label]['file'])
     output:
-        pos="external_bw/COV/{external_label}.pos.bedgraph",
-        neg="external_bw/COV/{external_label}.neg.bedgraph"
+        pos=temp("external_bw/COV/{external_label}.pos.bedgraph"),
+        neg=temp("external_bw/COV/{external_label}.neg.bedgraph")
     params:
         run_time="1:00:00",
-        error_out_file = "error_files/coverage_bedgraph",
-        out_file = "stdout/CITS_bedgraph.{external_label}",
+        error_out_file = "error_files/COV_bedgraph.{external_label}",
+        out_file = "stdout/COV_bedgraph.{external_label}",
         cores = 1,
         memory = 40000,
 

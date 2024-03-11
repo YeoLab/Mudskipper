@@ -7,7 +7,7 @@ rule extract_read_two:
     params:
         run_time="2:00:00",
         cores = 1,
-        error_out_file = "error_files/extract_read2",
+        error_out_file = "error_files/extract_read2.{sample_label}",
         out_file = "stdout/extract_read2.{sample_label}",
         memory = 40000,
     conda:
@@ -36,7 +36,7 @@ rule CITS_bam_to_bedgraph:
         neg=temp("CITS/{sample_label}.neg.bedgraph")
     params:
         run_time="2:00:00",
-        error_out_file = "error_files/CITS_bedgraph",
+        error_out_file = "error_files/CITS_bedgraph.{sample_label}",
         cores = 1,
         out_file = "stdout/CITS_bedgraph.{sample_label}",
         memory = 40000,
@@ -44,6 +44,7 @@ rule CITS_bam_to_bedgraph:
         "docker://howardxu520/skipper:bigwig_1.0"
     shell:
         """
+        export LC_ALL=C
         bedtools genomecov -ibam {input.bam} -bg -scale 1 -strand + -5 | sort -k 1,1 -k2,2n > {output.pos}
         bedtools genomecov -ibam {input.bam} -bg -scale -1 -strand - -5 | sort -k 1,1 -k2,2n > {output.neg}
         """
@@ -56,7 +57,7 @@ rule COV_bam_to_bedgraph:
         neg=temp("coverage/{sample_label}.neg.bedgraph")
     params:
         run_time="1:00:00",
-        error_out_file = "error_files/coverage_bedgraph",
+        error_out_file = "error_files/COV_bedgraph.{sample_label}",
         out_file = "stdout/COV_bedgraph.{sample_label}",
         cores = 1,
         memory = 40000,
@@ -64,6 +65,7 @@ rule COV_bam_to_bedgraph:
         "docker://howardxu520/skipper:bigwig_1.0"
     shell:
         """
+        export LC_ALL=C
         bedtools genomecov -ibam {input.bam} -bg -scale 1 -strand + -split | sort -k 1,1 -k2,2n > {output.pos}
         bedtools genomecov -ibam {input.bam} -bg -scale -1 -strand - -split | sort -k 1,1 -k2,2n > {output.neg}
         """
@@ -84,5 +86,6 @@ rule bedgraph_to_bw:
         "docker://howardxu520/skipper:bigwig_1.0"
     shell:
         """
+        export LC_ALL=C
         bedGraphToBigWig {input.bedgraph} {params.chr_size} {output.bw}
         """

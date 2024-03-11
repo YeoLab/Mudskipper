@@ -41,6 +41,29 @@ rule piranha_internal:
         Piranha -s -u 0 {output.filtered_ip} {output.cc} > {output.out};
         """
 
+rule piranha_nobg:
+    input:
+        counts = lambda wildcards: f"counts_CC/genome/bgtables/internal/"+libname_to_experiment(wildcards.libname)+f".{wildcards.clip_sample_label}.tsv.gz",
+    output:
+        ip = temp("comparison/piranha/nobg/{libname}.{clip_sample_label}.IP.bed"),
+        filtered_ip = temp("comparison/piranha/nobg/{libname}.{clip_sample_label}.IP.filtered.bed"),
+        out="comparison/piranha/nobg/{libname}.{clip_sample_label}.bed",
+    params:
+        error_out_file = "error_files/prianha.{libname}.{clip_sample_label}.err",
+        out_file = "stdout/piranha.{libname}.{clip_sample_label}.out",
+        run_time = "06:10:00",
+        memory = 10000,
+        cores = 1,
+    conda:
+        "envs/piranha.yaml"
+    benchmark: "benchmarks/run_piranha.{libname}.{clip_sample_label}.txt"
+    shell:
+        """  
+        zcat {input.counts} | awk -f {SCRIPT_PATH}/awk_by_colname.txt -v cols=chr,start,end,name,{wildcards.libname}.{wildcards.clip_sample_label},strand > {output.ip}
+        awk '{{if ($5>0) {{print}}}}' {output.ip} > {output.filtered_ip}
+        Piranha -s -u 0 {output.filtered_ip} > {output.out};
+        """
+
 rule uniquely_mapped_reads_for_omni_and_pure:
     input:
         bam_ip="{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.bam",

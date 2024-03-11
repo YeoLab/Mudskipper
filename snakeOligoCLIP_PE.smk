@@ -227,7 +227,7 @@ use rule COV_bam_to_bedgraph from make_track as COV_bedgraph_external with:
         cores = 1,
         memory = 40000,
 
-use rule  from make_track
+use rule * from make_track
 ########## MERGE BW ############
 use rule * from merge_bw
 

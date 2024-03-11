@@ -69,6 +69,11 @@ def skipper_outputs():
         external_label = list(external_normalization.keys()),
         libname = libnames,
         clip_sample_label = list(set(rbps)-set(config['AS_INPUT']))
+        )+expand("skipper_external/{external_label}/homer/finemapped_results/{signal_type}/{libname}.{clip_sample_label}/homerResults.html",
+        external_label = list(external_normalization.keys()),
+        libname = libnames,
+        clip_sample_label = config['RBP_TO_RUN_MOTIF'],
+        signal_type = ['CITS', 'COV']
         )
     return outputs
 
@@ -178,9 +183,10 @@ def clipper_outputs():
     return outputs
 
 def comparison_outputs():
-    outputs = expand("comparison/piranha/CC/{libname}.{sample_label}.bed",
+    outputs = expand("comparison/piranha/{bg}/{libname}.{sample_label}.bed",
         libname = libnames,
         sample_label =list(set(rbps)-set(config['AS_INPUT'])),
+        bg = ['CC', 'nobg']
     )
     # )+expand("comparison/pureclip/{libname}.{sample_label}.bind.bed",
     #     libname = libnames,

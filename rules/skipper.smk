@@ -91,7 +91,7 @@ rule fit_clip_betabinom:
     benchmark: "benchmarks/fit_clip_betabinomial_model/{libname}.{sample_label}.fit_clip.txt"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}fit_clip_betabinom_no_other_col.R {input.nuc} {input.table} {wildcards.libname} {wildcards.libname}.{wildcards.sample_label} {output.coef} 
+        Rscript --vanilla {SCRIPT_PATH}/fit_clip_betabinom_no_other_col.R {input.nuc} {input.table} {wildcards.libname} {wildcards.libname}.{wildcards.sample_label} {output.coef} 
         """
 
 rule combine_ip_to_background:

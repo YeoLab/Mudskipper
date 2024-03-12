@@ -57,8 +57,8 @@ rule tile_adaptor:
     benchmark: "benchmarks/tile_adaptor"
     shell:      
         """
-        python {SCRIPT_PATH}create_adaptor_tile.py {params.adaptor_fwd} {output.adafwd} {params.tiling_length}
-        python {SCRIPT_PATH}create_adaptor_tile.py {params.adaptor_rev} {output.adarev} {params.tiling_length}
+        python {SCRIPT_PATH}/create_adaptor_tile.py {params.adaptor_fwd} {output.adafwd} {params.tiling_length}
+        python {SCRIPT_PATH}/create_adaptor_tile.py {params.adaptor_rev} {output.adarev} {params.tiling_length}
         """
 
 rule trim_adaptor:

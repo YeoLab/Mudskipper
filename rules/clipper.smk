@@ -38,7 +38,6 @@ rule clipper:
         "docker://brianyee/clipper:charlene_move_data"
     shell:
         """
-        module load clipper/charlene_move_data_branch
         clipper -b {input.bam} -s {params.species} -o {output.peak} --processors=16 --datadir {params.datadir}
         """
 

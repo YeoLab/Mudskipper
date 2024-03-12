@@ -131,7 +131,7 @@ rule sum_all_other_background_re:
     input:
         lambda wildcards: expand("counts/repeats/vectors/{libname}.{sample_label}.counts",
         libname = ["{libname}"],
-        sample_label = list(set(rbps)-set([wildcards.sample_label])-set([config['AS_INPUT']]))
+        sample_label = list(set(rbps)-set([wildcards.sample_label])-set(config['AS_INPUT']))
         )
     output:
         counts= "counts_CC/repeats/vectors/{libname}.{sample_label}.counts",

@@ -86,6 +86,8 @@ rule uniquely_mapped_reads_for_omni_and_pure:
         samtools index {output.bam_ip_umap}
         samtools index {output.bam_in_umap}
         """
+
+# The below rules don't work
 rule pureclip_internal:
     input:
         bam_ip_umap = "{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.umap.bam",

@@ -3,8 +3,9 @@
 - Yeolab paired-end protocol: use `snakeOligoCLIP_PE.smk`
 
 # Installation
-- Snakemake 7.3.8:  [Snakemake Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html)
-    - install snakemake 7.3.8 `rules/envs/snakemake.yaml`.
+- Main environment: Snakemake 7.3.8 and scipy:  
+    - [Snakemake Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html)
+    - install snakemake 7.3.8 using `rules/envs/snakemake.yaml`.
     - Snakemake 8 has different command line options that will need modification in `--profile`
 - Singularity 3.11: [Singularity](https://docs.sylabs.io/guides/3.0/user-guide/build_a_container.html).
     - If you are on a server, ask the sys admin to install it. Sometimes there are weird permission issue if you install on your own.
@@ -26,7 +27,7 @@
     snakemake -s snakeABC_SE.smk \
         --configfile config/preprocess_config/oligose_k562_noalt_smalltest.yaml \
         --profile profiles/tscc2 \
-        - n
+        -n
     ```
     - `-s`: use `snakeOligoCLIP_PE.smk` if you did YeoLab internal pair-end protocol. use `snakeABC_SE.smk` if you did ABC
     - `--configfile`: yaml file to specify your inputs, including where are the fastqs, what are the barcode, what reference genome...etc.

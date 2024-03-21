@@ -61,6 +61,9 @@ def skipper_outputs():
         libname = libnames,
         sample_label = config['RBP_TO_RUN_MOTIF'],
         signal_type = ['CITS', 'COV']
+        )+expand("skipper_CC/enriched_re/{libname}.{sample_label}.enriched_re.tsv.gz",
+                 libname = libnames,
+                sample_label = list(set(rbps)-set(config['AS_INPUT']))
         )
     # normalize to external bams
     if external_normalization:
@@ -69,6 +72,11 @@ def skipper_outputs():
         external_label = list(external_normalization.keys()),
         libname = libnames,
         clip_sample_label = list(set(rbps)-set(config['AS_INPUT']))
+        )+expand("skipper_external/{external_label}/homer/finemapped_results/{signal_type}/{libname}.{clip_sample_label}/homerResults.html",
+        external_label = list(external_normalization.keys()),
+        libname = libnames,
+        clip_sample_label = config['RBP_TO_RUN_MOTIF'],
+        signal_type = ['CITS', 'COV']
         )
     return outputs
 
@@ -146,7 +154,15 @@ def DMN_outputs():
         libname = libnames,
         )+expand('mask/{libname}.repeat_mask.csv',
         libname = libnames,
+        )+expand("DMM_repeat/{repeat_type}/{libname}.{sample_label}.enriched_windows.tsv", 
+            sample_label = rbps, 
+            repeat_type = ['name'],
+            libname = libnames
+        )+expand("DMM_repeat/{repeat_type}/{libname}.megaoutputs.tsv",
+            libname = libnames,
+            repeat_type = ['name']
         )
+        
     
     return outputs
 
@@ -161,7 +177,7 @@ def clipper_outputs():
         libname = libnames
         )
         # complementary control
-        output+=expand("CLIPper_CC/{libname}.{sample_label}.peaks.normed.compressed.annotate.bed",
+        outputs+=expand("CLIPper_CC/{libname}.{sample_label}.peaks.normed.compressed.annotate.bed",
         sample_label = list(set(rbps)-set(config['AS_INPUT'])),
         libname = libnames
         )+expand("CLIPper_CC/{libname}.{sample_label}.peaks.normed.compressed.motif.svg",
@@ -178,13 +194,15 @@ def clipper_outputs():
     return outputs
 
 def comparison_outputs():
-    outputs = expand("comparison/piranha/CC/{libname}.{sample_label}.bed",
+    outputs = expand("comparison/piranha/{bg}/{libname}.{sample_label}.bed",
         libname = libnames,
         sample_label =list(set(rbps)-set(config['AS_INPUT'])),
-    )+expand("comparison/pureclip/{libname}.{sample_label}.bind.bed",
-        libname = libnames,
-        sample_label = list(set(rbps)-set(config['AS_INPUT']))
+        bg = ['CC', 'nobg']
     )
+    # )+expand("comparison/pureclip/{libname}.{sample_label}.bind.bed",
+    #     libname = libnames,
+    #     sample_label = list(set(rbps)-set(config['AS_INPUT']))
+    # ) # very slow to run
     # )+expand("comparison/omniCLIP/output/{libname}.{sample_label}.omniclip_done.txt",
     #     libname = libnames,
     #     sample_label = list(set(rbps)-set(config['AS_INPUT']))

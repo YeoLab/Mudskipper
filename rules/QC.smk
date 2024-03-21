@@ -1,10 +1,10 @@
-SCRIPT_PATH=config['SCRIPT_PATH']
+locals().update(config)
 
 sample_labels = config['rbps']
 libnames = config['libnames']
 rbps = config['rbps']
 
-HUMAN_RNA_NUCLEOTIDE='/projects/ps-yeolab4/seqdata/20200622_gencode_coords_hsher/GRCh38_latest_rna.fna'
+HUMAN_RNA_NUCLEOTIDE='/tscc/projects/ps-yeolab4/seqdata/20200622_gencode_coords_hsher/GRCh38_latest_rna.fna'
 N_READ_TO_SAMPLE=5*10**3
 
 rule gather_trimming_stat:
@@ -17,6 +17,7 @@ rule gather_trimming_stat:
         cores="1",
         error_out_file = "error_files/qctrim.txt",
         out_file = "stdout/qctrim",
+        memory = 5000,
     conda:
         "envs/metadensity.yaml"
     shell:
@@ -33,8 +34,7 @@ rule gather_fastqc_report:
     params:
         run_time = "00:40:00",
         cores = "1",
-        memory = "10000",
-        job_name = "gather_stat",
+        memory = 10000,
         error_out_file = "error_files/fastqc_stat.txt",
         out_file = "stdout/fastqc",
     conda:
@@ -55,8 +55,7 @@ rule gather_mapstat:
         error_out_file = "error_files/mapstat",
         run_time = "00:40:00",
         cores = "1",
-        memory = "10000",
-        job_name = "gather_stat",
+        memory = 10000,
         out_file = "stdout/mapstat",
     shell:
         """
@@ -75,8 +74,7 @@ rule duplication_rate:
         out_file = "stdout/dup_rate",
         run_time = "00:40:00",
         cores = "1",
-        memory = "10000",
-        job_name = "gather_stat",
+        memory = 10000,
     conda:
         "envs/metadensity.yaml"
     shell:
@@ -95,7 +93,8 @@ rule count_demultiplex_ultraplex:
         out_file = "stdout/readcount",
         run_time = "00:40:00",
         cores = "1",
-        memory = "10000",
+        memory = 10000,
+    container: None
     shell:
         """
         touch {output}
@@ -118,7 +117,8 @@ rule make_read_count_summary:
         error_out_file = "error_files/{libname}.read_count_summary.err",
         out_file = "stdout/{libname}.read_count_summary.out",
         run_time = "1:20:00",
-        cores = 1
+        cores = 1,
+        memory = 40000,
     run:
         import os
         print(output.region_summary)
@@ -162,12 +162,14 @@ rule what_is_read_wo_barcode:
         out_file = "stdout/readwobar",
         run_time = "00:40:00",
         cores = "1",
+        memory = 20000,
         nlines = N_READ_TO_SAMPLE * 4
+    conda:
+        "envs/blast.yaml"
     shell:
         """
         set +o pipefail; 
         zcat {input.query_fq_gz} | head -n {params.nlines} | sed -n '1~4s/^@/>/p;2~4p' > {output.fasta}
-        module load blast
         blastn -db {input.target} -query {output.fasta} -out {output.blast_result} -outfmt 6 -max_target_seqs 1 
         """
 
@@ -187,14 +189,15 @@ rule blast_unmapped_reads:
         out_file = "stdout/blastunmap",
         run_time = "00:40:00",
         cores = "1",
+        memory = 20000,
         nlines = N_READ_TO_SAMPLE * 4
+    conda:
+        "envs/blast.yaml"
     shell:
         """
         set +o pipefail; 
-        module load samtools
         samtools fasta {input.unmapped1_fq} | head -n {params.nlines} > {output.fasta1}
         samtools fasta {input.unmapped2_fq} | head -n {params.nlines} > {output.fasta2}
-        module load blast
         blastn -db {input.target} -query {output.fasta1} -out {output.blast_result1} -outfmt 6 -max_target_seqs 1 
         blastn -db {input.target} -query {output.fasta2} -out {output.blast_result2} -outfmt 6 -max_target_seqs 1 
         """
@@ -212,19 +215,22 @@ rule blast_unmapped_reads_too_short:
         out_file = "stdout/blastunmap",
         run_time = "00:40:00",
         cores = "1",
-        nlines = N_READ_TO_SAMPLE
+        nlines = N_READ_TO_SAMPLE,
+        memory = 20000,
+    conda:
+        "envs/blast.yaml"
     shell:
         """
         set +o pipefail; 
-        module load samtools
         samtools view -f 4 {input.bam} | grep uT:A:1 | head -n {params.nlines} | samtools fasta >  {output.fasta}
-        module load blast
         blastn -db {input.target} -query {output.fasta} -out {output.blast_result} -outfmt 6 -max_target_seqs 1 
         """
 
 rule summary_QC_statistics:
     ''' Gigantic summary table on where we lose our reads '''
     input:
+        fastqc_initial = 'QC/fastQC_initial_basic_summary.csv',
+        fastqc_post_processing = 'QC/fastQC_basic_summary.csv',
         cutadapt_stat = 'QC/cutadapt_stat.csv',
         mapping_stat = 'QC/mapping_stats.csv',
         dup_stat = 'QC/dup_level.csv',
@@ -236,7 +242,8 @@ rule summary_QC_statistics:
         error_out_file = "error_files/QC_summary",
         out_file = "stdout/QC_summary",
         run_time = "00:20:00",
-        cores = 1
+        cores = 1,
+        memory = 20000,
     run:
         import pandas as pd
         import re
@@ -251,7 +258,10 @@ rule summary_QC_statistics:
             if match:
                 num_reads = match.group(1)
                 percentage = match.group(2)
-            return num_reads, percentage
+                return num_reads, percentage
+            else:
+                print(s)
+                return None, None
         def extract_input_reads(s):
             '''Demultiplexing complete! 21532666 reads processed in 1095.0 seconds'''
             pattern = r'(?<=Demultiplexing complete! )\d+(?= reads processed)'
@@ -261,7 +271,10 @@ rule summary_QC_statistics:
             if matches:
                 num_reads = int(matches[0])
                 
-            return num_reads
+                return num_reads
+            else:
+                print(s)
+                return None
 
         def extract_quality_trimmed(s):
             pattern = r"(\d+)\s+\((\d+\.\d+)%\)\s+reads\s+quality\s+trimmed"
@@ -269,7 +282,10 @@ rule summary_QC_statistics:
             if match:
                 num_reads = match.group(1)
                 percentage = match.group(2)
-            return num_reads, percentage
+                return num_reads, percentage
+            else:
+                print(s)
+                return None, None
 
         def get_ultraplex_stat(basedir):
             ultraplex_stat = []

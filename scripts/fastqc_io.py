@@ -102,7 +102,8 @@ if __name__=='__main__':
     all_data_df=pd.concat(all_data, axis = 1).T
     
     summary = all_data_df.apply(pd.Series.value_counts).fillna(0).T
-    print(summary.loc[(summary['fail']>0)|(summary['warn']>0)])
+    print(summary)
+        
     
     all_data_basic_df.to_csv(options.outfile)
     all_data_df.to_csv(options.pass_fail_output)

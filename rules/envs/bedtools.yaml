@@ -2,5 +2,5 @@ name: metadensity
 channels:
   - bioconda
 dependencies:
-  - samtools
+  - bedtools
 prefix: /tscc/nfs/home/hsher/miniconda3/envs/samtools

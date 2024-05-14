@@ -7,6 +7,7 @@ from pybedtools import BedTool
 from scipy.stats import zscore
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import warnings
 
 plt.style.use('seaborn-white')
 plt.rcParams['pdf.fonttype'] = 42
@@ -46,11 +47,15 @@ def fit_regression(raw_counts, total_reads, pseudocount_nread = 10, rsquare_thre
 
         individual_coef_df.append([index, reg_score, coef[0,0], intercept[0]])
     individual_coef_df = pd.DataFrame(individual_coef_df, columns = ['name', 'R_square', 'coef', 'intercept'])
-    y_dev_df = pd.concat(y_dev_df, axis = 1).T
-    
-    # calculate deviation z-score
-    deviation_zscore = np.reshape(zscore(y_dev_df.values.flatten()), y_dev_df.shape)
-    deviation_zscore = pd.DataFrame(deviation_zscore, index = y_dev_df.index, columns = y_dev_df.columns)
+    try:
+        y_dev_df = pd.concat(y_dev_df, axis = 1).T
+        
+        # calculate deviation z-score
+        deviation_zscore = np.reshape(zscore(y_dev_df.values.flatten()), y_dev_df.shape)
+        deviation_zscore = pd.DataFrame(deviation_zscore, index = y_dev_df.index, columns = y_dev_df.columns)
+    except:
+        deviation_zscore = pd.DataFrame()
+        warnings.warn("No family has good regression line")
     
     return deviation_zscore, individual_coef_df
 

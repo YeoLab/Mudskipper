@@ -1,23 +1,4 @@
 locals().update(config)
-# rule make_clipper_annotation:
-#     input:
-#         config['GTF'] # gtf.db
-#     output:
-
-#     params:
-
-#     shell:
-#         """
-#         module load annotator/0.99.0
-#         create_region_bedfiles \
-#             --db_file {input} \  # database file downloaded from above
-#             --species mm10 \  # sets the gff/gtf nomenclature (essentially whether it's gencode or wormbase gtf format)
-#             --cds_out outputs/mm10_vM10_cds.bed \  # output cds region
-#             --proxintron_out outputs/mm10_vM10_proxintrons.bed \  # output proximal intron regions (500nt from exons)
-#             --distintron_out outputs/mm10_vM10_distintrons.bed \  # output distal intron regions (> 500nt from exons)
-#             --utr5_out outputs/mm10_vM10_five_prime_utrs.bed \  # output 5'UTR regions
-#             --utr3_out outputs/mm10_vM10_three_prime_utrs.bed  # output 3' UTR regions
-#         """
 
 rule clipper:
     input:
@@ -27,8 +8,6 @@ rule clipper:
         peak="CLIPper/{libname}.{sample_label}.peaks.bed"
     params:
         run_time="16:00:00",
-        species=config['SPECIES'],
-        datadir = config['DATADIR'],
         error_out_file = "error_files/clipper.{libname}.{sample_label}",
         out_file="stdout/clipper.{libname}.{sample_label}",
         cores = "10",
@@ -38,7 +17,7 @@ rule clipper:
         "docker://brianyee/clipper:charlene_move_data"
     shell:
         """
-        clipper -b {input.bam} -s {params.species} -o {output.peak} --processors=16 --datadir {params.datadir}
+        clipper -b {input.bam} -s {SPECIES} -o {output.peak} --processors=16 --datadir {DATADIR}
         """
 
 rule count_mapped_reads:

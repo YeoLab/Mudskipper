@@ -148,14 +148,14 @@ def DMN_outputs():
         signal_type = ['CITS', 'COV']
         )+expand("DMM/finemapping/mapped_sites/{signal_type}/{libname}.{sample_label}.finemapped_windows.bed.gz",
         libname = libnames,
-        sample_label = rbps,
+        sample_label = list(set(rbps)-set(config['AS_INPUT'])),
         signal_type = ['CITS', 'COV']
         )+expand('mask/{libname}.genome_mask.csv',
         libname = libnames,
         )+expand('mask/{libname}.repeat_mask.csv',
         libname = libnames,
         )+expand("DMM_repeat/{repeat_type}/{libname}.{sample_label}.enriched_windows.tsv", 
-            sample_label = rbps, 
+            sample_label = list(set(rbps)-set(config['AS_INPUT'])), 
             repeat_type = ['name'],
             libname = libnames
         )+expand("DMM_repeat/{repeat_type}/{libname}.megaoutputs.tsv",
@@ -198,7 +198,13 @@ def comparison_outputs():
         libname = libnames,
         sample_label =list(set(rbps)-set(config['AS_INPUT'])),
         bg = ['CC', 'nobg']
-    )
+    )+expand("{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.tag.bed.gz",
+        libname = libnames,
+        sample_label =list(set(rbps)-set(config['AS_INPUT']))),
+    # )+expand("comparison/CTK/{libname}.{sample_label}.uniq.peak.sig.bed",
+    #     libname = libnames,
+    #     sample_label =list(set(rbps)-set(config['AS_INPUT'])),
+    # )
     # )+expand("comparison/pureclip/{libname}.{sample_label}.bind.bed",
     #     libname = libnames,
     #     sample_label = list(set(rbps)-set(config['AS_INPUT']))

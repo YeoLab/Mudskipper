@@ -5,7 +5,7 @@ rule make_repeat_megatable:
         replicate_counts = lambda wildcards: expand(
             "counts/repeats/vectors/{libname}.{sample_label}.counts", 
             libname = ['{libname}'], # TODO: make dictionary
-            sample_label = config['rbps']),
+            sample_label = list(set(rbps)-set(config['AS_INPUT']))),
     output:
         name_table = "counts/repeats/megatables/name/{libname}.tsv.gz",
         class_table = "counts/repeats/megatables/class/{libname}.tsv.gz",
@@ -68,7 +68,7 @@ rule analyze_DMN:
         repeat_mask = 'mask/{libname}.repeat_mask.csv', #True means zscore > 1
     output:
         expand("DMM_repeat/{repeat_type}/{libname}.{sample_label}.enriched_windows.tsv", 
-            sample_label = config['rbps'], 
+            sample_label = list(set(rbps)-set(config['AS_INPUT'])), 
             repeat_type = ['{repeat_type}'],
             libname = ['{libname}']),
         "DMM_repeat/{repeat_type}/{libname}.megaoutputs.tsv"

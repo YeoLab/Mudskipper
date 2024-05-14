@@ -14,16 +14,10 @@ basedir= args[5] #'/home/hsher/scratch/oligo_PE_iter4_PRPF8_internal'
 out_stem = args[6] #'iter4.PRPF8.Rep1'
 dir.create(basedir, showWarnings = FALSE, recursive = TRUE)
 
-# fl = '/home/hsher/scratch/oligo_PE_iter4/internal_output/counts/genome/bgtables/internal/iter4.PRPF8.tsv.gz'
-# annotation = '/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz'
-# ip_col = 'Rep1.PRPF8'
-# in_col = 'Rep1.internal'
-# basedir='/home/hsher/scratch/'
-# out_stem='iter4.PRPF8.Rep1'
-
 sample_cols = c(ip_col, in_col)
 print(sample_cols)
 
+# Parameters
 options(width=70, digits=2)
 full <- TRUE ### TODO: change to TRUE
 .qualitative <- DirichletMultinomial:::.qualitative
@@ -33,11 +27,18 @@ max_component = 5
 component_gap = 1
 comp_attempt = seq(min_component, max_component, component_gap)
 min_read = 10 # IgG had only 1 component when min_read = 0, CC was fine
+fr_over_total = 6
 
 # filter read count
 count_df = read_tsv(fl)
 print(head(count_df))
+
+
 count_df = count_df[rowSums(count_df[sample_cols])>min_read, ]
+# select by average fraction of reads instead of total reads. This might benefit lowly sequenced RBP
+# average_fraction <- rowSums(t(t(count_df[sample_cols])/colSums(count_df[sample_cols])))/length(sample_cols)
+# count_df = count_df[average_fraction>fr_over_total/nrow(count_df), ]
+
 count <- as.matrix(count_df[sample_cols]) # don't need to t because we have different orientation
 print('count matrix nrows=')
 print(nrow(count))
@@ -68,7 +69,7 @@ bic <- sapply(fit, BIC)
  dev.off()
 
   # find the best model: the DMN object
- (best <- fit[[which.min(lplc)]])
+ (best <- fit[[which.min(bic)]])
 
 ################ CLUSTER SIZE ################
 # reports the weight $\pi$ and $\theta$
@@ -93,17 +94,9 @@ p_best <- fitted(best, scale=TRUE)
 colnames(p_best) <- paste("m", 1:ncol(p_best), sep="")
 (meandiff <- colSums(abs(p_best - as.vector(p0)))) # the difference of each component to 1 single component (possibly the null)
 
-# table summarizes what is different from the 1 component
-# diff <- rowSums(abs(p_best - as.vector(p0)))
-# o <- order(diff, decreasing=TRUE)
-# cdiff <- cumsum(diff[o]) / sum(diff)
-# df <- cbind(Mean=p0[o], p_best[o,], diff=diff[o], cdiff)
-# write_tsv(data.frame(df) %>% rownames_to_column(), file.path(basedir, paste0(out_stem,'.cluster_mean.tsv')))
-
 # export the component
 mixture_df = mixture(best, assign = FALSE) # sample by component matrix
 row.names(mixture_df) <- count_df$name
-
 
 # join annotation
 anno_df = read_tsv(annotation)

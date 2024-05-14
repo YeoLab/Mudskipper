@@ -83,7 +83,7 @@ fit_beta_binom_mixture <- function(count_df, basedir, out_stem){
      dev.off()
 
       # find the best model: the DMN object
-     (best <- fit[[which.min(lplc)]])
+     (best <- fit[[which.min(bic)]])
 
     ################ CLUSTER SIZE ################
     # reports the weight $\pi$ and $\theta$

@@ -163,7 +163,7 @@ rule make_window_by_barcode_table:
     input:
         counts = expand("counts/genome/vectors/{libname}.{sample_label}.counts",
             libname = ["{libname}"],
-            sample_label = rbps),
+            sample_label = list(set(rbps)-set(config['AS_INPUT']))),
     output:
         counts = "counts/genome/megatables/{libname}.tsv.gz",
     params:
@@ -215,7 +215,9 @@ rule analyze_DMN:
         "DMM/{libname}.weights.tsv",
         'mask/{libname}.genome_mask.csv'
     output:
-        expand("DMM/{libname}.{sample_labels}.enriched_windows.tsv", sample_labels = rbps, libname = ["{libname}"]),
+        expand("DMM/{libname}.{sample_labels}.enriched_windows.tsv", 
+        sample_labels = list(set(rbps)-set(config['AS_INPUT'])), 
+        libname = ["{libname}"]),
         "DMM/{libname}.megaoutputs.tsv"
     params:
         error_out_file = "error_files/analyze_DMN.{libname}.err",

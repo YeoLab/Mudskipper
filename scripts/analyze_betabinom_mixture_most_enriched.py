@@ -85,12 +85,14 @@ if __name__=='__main__':
     mapped_reads_fraction = mapped_reads.div(mapped_reads.sum())
     print('========Fraction mapped reads: \n ========',mapped_reads_fraction)
 
-    if component_alpha.shape[1]>1:
+    component_fc = model_mean.div(mapped_reads_fraction, axis = 0).T
+    comp = component_fc.loc[component_fc[outstem]>component_fold_threshold].index
+    not_bound_comp = component_fc.loc[component_fc[outstem]<=component_fold_threshold].index
+
+    if component_alpha.shape[1]>1 and len(comp)>0:
         print('======== Multiple components detects, use mixture model to estimate binding========')
         # select components
-        component_fc = model_mean.div(mapped_reads_fraction, axis = 0).T
-        comp = component_fc.loc[component_fc[outstem]>component_fold_threshold].index
-        not_bound_comp = component_fc.loc[component_fc[outstem]<=component_fold_threshold].index
+        
 
         print(f'components with bindinig: {comp}')
         
@@ -160,12 +162,27 @@ if __name__=='__main__':
         bg_metadata = pd.concat([mapped_reads,mapped_reads_fraction], axis = 1)
         bg_metadata.columns = ['total_reads', 'fraction_reads']
         
-        
-        
     else:
-        print(f'======== {outstem} has single component, fall back to hypothesis testing========')
+        
+        print(f'''======== {outstem} has single component or no enriche comp
+        , fall back to hypothesis testing========''')
         #data = calculate_pvalue(raw_counts, outstem, component_alpha.iloc[:, ], annotation_df)
-        pvalue=1-betabinom.cdf(n = nread_per_window, a = component_alpha.loc[outstem].iloc[0], b = component_alpha.loc[control_col].iloc[0], k = counts[outstem])
+        # no enriched comp
+        
+        
+        if component_alpha.shape[1]==1:
+            
+            pvalue=1-betabinom.cdf(n = nread_per_window, 
+                                   a = component_alpha.loc[outstem].iloc[0], 
+                                   b = component_alpha.loc[control_col].iloc[0], 
+                                   k = counts[outstem]-1)
+        else:
+            max_weight_comp = component_weights['pi'].idxmax()
+            pvalue=1-betabinom.cdf(n = nread_per_window, 
+                                a = component_alpha.loc[outstem][max_weight_comp], 
+                                b = component_alpha.loc[control_col][max_weight_comp], 
+                                k = counts[outstem]-1)
+            
         _, qvalue = fdrcorrection(pvalue)
         
         # fold change
@@ -175,7 +192,7 @@ if __name__=='__main__':
         p_df['fc_raw']=p_df['p_raw']/mapped_reads_fraction[outstem]
         
         results = data.merge(p_df, left_on = 'name', right_index = True)
-        results['enriched']=(results['qvalue']<FDR_cutoff)
+        results['enriched']=(results['qvalue']<FDR_cutoff) # at least 1 read. sometimes when value is extreme is goes all sig
 
     enriched_windows = results.loc[results['enriched']]
     print(f'Finish testing, found enriched_windows: ', enriched_windows.shape[0])
@@ -186,63 +203,69 @@ if __name__=='__main__':
 
     # analysis
     fcount = results.groupby(by = 'enriched')['feature_type_top'].value_counts().unstack().fillna(0).T
-    fcount['Positive rate'] = fcount[True]/(fcount[True]+fcount[False])
-    fcount.to_csv(outdir / f'{outstem}.feature_type_summary.tsv', sep = '\t')
-
-    gcount = results.groupby(by = 'enriched')['gene_type_top'].value_counts().unstack().fillna(0).T
-    gcount['Positive rate'] = gcount[True]/(gcount[True]+gcount[False])
-    gcount.to_csv(outdir / f'{outstem}.gene_type_summary.tsv', sep = '\t')
-
-    tcount = results.groupby(by = 'enriched')['transcript_type_top'].value_counts().unstack().fillna(0).T
-    tcount['Positive rate'] = tcount[True]/(tcount[True]+tcount[False])
-    tcount.to_csv(outdir / f'{outstem}.transcript_type_summary.tsv', sep = '\t')
-
-    f, ax=plt.subplots(3,2, figsize = (12,12))
-
-    for i, cnt in enumerate([fcount, gcount, tcount]):
-        cnt[True].sort_values().plot.barh(ax = ax[i,0], color = 'lightgrey')
-        cnt['Positive rate'].sort_values().plot.barh(ax = ax[i,1], color = 'lightgrey')
-
-    ax[i,0].set_xlabel('# enriched window')
-    ax[i,1].set_xlabel('Positive rate')
-    sns.despine()
-    plt.tight_layout()
-    plt.savefig(outdir / f'{outstem}.summaries.pdf')
-    plt.show()
-
-    # classification by feature
-    binary_df = pd.DataFrame(False, index = results.index, columns = results['feature_type_top'].unique())
-    for index, row in results.iterrows():
-        binary_df.loc[index, row['feature_type_top'].split(':')] = True
-
-    from sklearn.linear_model import LogisticRegression
-    X = binary_df
-    y = results.loc[binary_df.index, 'enriched']
-    clf = LogisticRegression().fit(X, y)
-    clf.score(X, y)
-
-    pd.Series(clf.coef_[0], index = binary_df.columns).sort_values().plot.barh()
-    plt.xlabel('Logistic Regression Coef')
-    plt.tight_layout()
-    plt.savefig(outdir / f'{outstem}.feature_logistic.pdf')
-    plt.show()
-
-    from sklearn.linear_model import RidgeClassifier
-    X = binary_df
-    y = results.loc[binary_df.index, 'enriched']
-    clf = RidgeClassifier().fit(X, y)
-    clf.score(X, y)
-
-    pd.Series(clf.coef_[0], index = binary_df.columns).sort_values().plot.barh()
-    plt.xlabel('Ridge Regression Coef')
-    plt.tight_layout()
-    plt.savefig(outdir / f'{outstem}.feature_ridge.pdf')
-    plt.show()
-
-
-
-
-
+    if True in fcount.columns and False in fcount.columns:
+        fcount['Positive rate'] = fcount[True]/(fcount[True]+fcount[False])
+        fcount.to_csv(outdir / f'{outstem}.feature_type_summary.tsv', sep = '\t')
+        
+        gcount = results.groupby(by = 'enriched')['gene_type_top'].value_counts().unstack().fillna(0).T
+        gcount['Positive rate'] = gcount[True]/(gcount[True]+gcount[False])
+        gcount.to_csv(outdir / f'{outstem}.gene_type_summary.tsv', sep = '\t')
+        
+        tcount = results.groupby(by = 'enriched')['transcript_type_top'].value_counts().unstack().fillna(0).T
+        tcount['Positive rate'] = tcount[True]/(tcount[True]+tcount[False])
+        tcount.to_csv(outdir / f'{outstem}.transcript_type_summary.tsv', sep = '\t')
+        
+        f, ax=plt.subplots(3,2, figsize = (12,12))
+        
+        for i, cnt in enumerate([fcount, gcount, tcount]):
+            cnt[True].sort_values().plot.barh(ax = ax[i,0], color = 'lightgrey')
+            cnt['Positive rate'].sort_values().plot.barh(ax = ax[i,1], color = 'lightgrey')
+            
+        
+        ax[i,0].set_xlabel('# enriched window')
+        ax[i,1].set_xlabel('Positive rate')
+        sns.despine()
+        plt.tight_layout()
+        plt.savefig(outdir / f'{outstem}.summaries.pdf')
+        plt.show()
+        
+        # classification by feature
+        binary_df = pd.DataFrame(False, index = results.index, columns = results['feature_type_top'].unique())
+        for index, row in results.iterrows():
+            binary_df.loc[index, row['feature_type_top'].split(':')] = True
+        
+        from sklearn.linear_model import LogisticRegression
+        X = binary_df
+        y = results.loc[binary_df.index, 'enriched']
+        clf = LogisticRegression().fit(X, y)
+        clf.score(X, y)
+        
+        pd.Series(clf.coef_[0], index = binary_df.columns).sort_values().plot.barh()
+        plt.xlabel('Logistic Regression Coef')
+        plt.tight_layout()
+        plt.savefig(outdir / f'{outstem}.feature_logistic.pdf')
+        plt.show()
+        
+        from sklearn.linear_model import RidgeClassifier
+        X = binary_df
+        y = results.loc[binary_df.index, 'enriched']
+        clf = RidgeClassifier().fit(X, y)
+        clf.score(X, y)
+        
+        pd.Series(clf.coef_[0], index = binary_df.columns).sort_values().plot.barh()
+        plt.xlabel('Ridge Regression Coef')
+        plt.tight_layout()
+        plt.savefig(outdir / f'{outstem}.feature_ridge.pdf')
+        plt.show()
+    else:
+        print('Fitting probably has problem. Either all window is positive or all window is negative')
+        print('This usually happens when count is extremely low')
+        
+        
+        
+        
+        
+        
 
 
 

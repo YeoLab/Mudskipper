@@ -161,3 +161,40 @@ rule omniclip_call:
             --db-file {DB_FILE} --bg-dat {input.cc_data} --clip-dat {input.ip_data} \
             --out-dir {output.outdir} > {output.done}
         """
+
+rule ctk:
+    input:
+        bam_ip_umap = "{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.umap.bam"
+    output:
+        mdtag = temp("{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.umap.md.sam.gz"),
+        mutation_file = "{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.mutation.txt",
+        tagbed = "{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.tag.bed.gz",
+        
+    params:
+        error_out_file = "error_files/ctk.{libname}.{sample_label}.err",
+        out_file = "stdout/ctk.{libname}.{sample_label}.out",
+        run_time = "2:10:00",
+        memory = 10000,
+        cores = 1,
+        peak = "comparison/CTK/{libname}.{sample_label}.uniq.peak.sig.bed",
+        peak_bd = "comparison/CTK/{libname}.{sample_label}.uniq.peak.sig.boundary.bed",
+        peak_PH = "comparison/CTK/{libname}.{sample_label}.uniq.peak.sig.halfPH.bed",
+    conda:
+        "envs/ctk.yaml"
+    shell:
+        """
+        samtools fillmd {input.bam_ip_umap} {GENOMEFA} | gzip -c > {output.mdtag}
+        parseAlignment.pl \
+            -v --map-qual 1 \
+            --min-len 18 \
+            --mutation-file {output.mutation_file} \
+            {output.mdtag} - | gzip -c > {output.tagbed}
+
+        tag2peak.pl -big -ss \
+            -v --valley-seeking -p 0.05 --valley-depth 0.9 \
+            --multi-test --dbkey hg38 \
+            {output.tagbed} \
+            {params.peak} \
+            --out-boundary {params.peak_bd} \
+            --out-half-PH {params.peak_PH}
+        """

@@ -96,7 +96,7 @@ bic <- sapply(fit, BIC)
  dev.off()
 
   # find the best model: the DMN object
- (best <- fit[[which.min(aic)]]) ## better estimation of binding score!
+ (best <- fit[[which.min(bic)]]) ## better estimation of binding score!
 
 ################ CLUSTER SIZE ################
 # reports the weight $\pi$ and $\theta$

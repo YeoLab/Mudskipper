@@ -106,7 +106,10 @@ def main(outstem_gc, raw_counts):
         metadata = model_mean
         print(f'======== {outstem} has single component, fall back to hypothesis testing========')
         #data = calculate_pvalue(raw_counts, outstem, component_alpha.iloc[:, ], annotation_df)
-        pvalue=1-betabinom.cdf(n = nread_per_window, a = component_alpha.loc[outstem].iloc[0], b = component_alpha.loc[control_col].iloc[0], k = counts[outstem])
+        pvalue=1-betabinom.cdf(n = nread_per_window, 
+                               a = component_alpha.loc[outstem].iloc[0], 
+                               b = component_alpha.loc[control_col].iloc[0], 
+                               k = counts[outstem]-1)
         _, qvalue = fdrcorrection(pvalue)
 
         # fold change

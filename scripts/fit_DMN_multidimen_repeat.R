@@ -57,7 +57,7 @@ bic <- sapply(fit, BIC)
  plot(bic, type="b", xlab="Number of Dirichlet Components(k)",ylab="BIC")
  plot(lplc, type="b", xlab="Number of Dirichlet Components(k)",ylab="Model Fit(Laplace)")
  dev.off()
-(best <- fit[[which.min(aic)]]) ## better estimation of binding score!
+(best <- fit[[which.min(bic)]]) ## better estimation of binding score!
 
 # mixture weights
 weights = mixturewt(best)

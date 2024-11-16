@@ -1,0 +1,42 @@
+"""
+snakemake -s snakeABC_SE.smk -j 12 \
+    --configfile config/preprocess_config/oligose_k562_noalt_smalltest.yaml \
+    --cluster "sbatch -t {params.run_time} -e {params.error_out_file} -o {params.out_file} -p condo -q condo -A csd792 --mem {params.memory} --tasks-per-node {params.cores} -J {rule}" \
+    --use-singularity \
+    --singularity-prefix /tscc/nfs/home/hsher/scratch/singularity \
+    --singularity-args "--bind /tscc/projects --bind /tscc/nfs/home/hsher/scratch --bind /tscc/nfs/home/hsher/" \
+    --conda-prefix /tscc/nfs/home/hsher/snakeconda \
+    --use-conda \
+    --notemp \
+    -n
+"""
+
+"""
+snakemake -s snakeABC_SE.smk \
+    --configfile /tscc/nfs/home/hsher/Mudskipper/config/preprocess_config/oligose_bbc_glados_RBFOX2.yaml \
+    --profile profiles/tscc2 \
+    -n \
+
+snakemake -s snakeABC_SE.smk \
+    --configfile config/preprocess_config/oligose_bbc_grady_SLBP.yaml \
+    --profile profiles/tscc2 \
+    -n
+
+--cluster "sbatch -t {params.run_time} -e {params.error_out_file} -o {params.out_file} -p condo -q condo -A csd792 --tasks-per-node {params.cores} --job-name {rule} --mem {params.memory}" \
+"""
+
+# snakemake 8
+snakemake -s snakeOligoCLIP_PE.smk -j 5 \
+    --configfile config/preprocess_config/oligope_iter6_reseq_test.yaml \
+    --use-singularity \
+    --singularity-prefix /tscc/nfs/home/hsher/scratch/singularity \
+    --singularity-args "--bind /tscc/projects --bind /tscc/nfs/home/hsher/scratch --bind /tscc/nfs/home/hsher/" \
+    --conda-prefix /tscc/nfs/home/hsher/snakeconda \
+    --use-conda \
+    --executor cluster-generic --cluster-generic-submit-cmd "sbatch -t {params.run_time} -e {params.error_out_file} -o {params.out_file} -p condo -q condo -A csd792 --mem {params.memory} --tasks-per-node {params.cores} -J {rule}" \
+    --software-deployment-method conda apptainer
+    
+    --notemp \
+    QC/summary.csv \
+    --conda-frontend conda \
+    -n

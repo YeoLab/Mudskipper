@@ -86,7 +86,7 @@ rule count_repeat_tables:
         family_table = "counts/repeats/tables/family/{experiment}.{sample_label}.tsv.gz",
     params:
         error_out_file = "error_files/make_repeat_count_tables.{experiment}.{sample_label}.err",
-        out_file = "stdout/make_repeat_count_tables.{experiment}.{sample_label}..out",
+        out_file = "stdout/make_repeat_count_tables.{experiment}.{sample_label}.out",
         run_time = "00:15:00",
         cores = "1",
         memory = 200,
@@ -148,29 +148,50 @@ rule sum_all_other_background_re:
         awk '{{arr[FNR]+=$1}}END{{for(i=2;i<=FNR;i+=1){{print arr[i]}} }}' {input} | awk 'BEGIN {{print \"{params.replicate_label}\"}} {{print}}' > {output}
         """
 
-rule combine_ip_to_internal_background: # bg_sample_label = 'internal'
+# Combine IP to CC
+use rule count_repeat_tables as combine_ip_to_CC with: 
     input:
-        count_table = "counts/repeats/tables/name/{experiment}.{sample_label}.tsv.gz",
-        bg_counts = lambda wildcards: expand("counts_CC/repeats/vectors/{libname}.{sample_label}.counts", 
-            libname = experiment_to_libname(wildcards.experiment), # TODO: make dictionary
-            sample_label = [wildcards.sample_label])
+        unique_repeats = config['REPEAT_TABLE'].replace(".tsv", ".sort.unique.bed"),
+        replicate_counts = lambda wildcards: expand(
+            "counts/repeats/vectors/{libname}.{sample_label}.counts", 
+            libname = experiment_to_libname(wildcards.experiment), 
+            sample_label = [wildcards.sample_label])+expand(
+            "counts_CC/repeats/vectors/{libname}.{sample_label}.counts",
+            libname = experiment_to_libname(wildcards.experiment), 
+            sample_label = [wildcards.sample_label]
+            ),
     output:
-        combined_count_table = "counts_CC/repeats/bgtables/internal/{experiment}.{sample_label}.tsv.gz"
+        name_table = "counts_CC/repeats/bgtables/internal/name/{experiment}.{sample_label}.tsv.gz",
+        class_table = "counts_CC/repeats/bgtables/internal/class/{experiment}.{sample_label}.tsv.gz",
+        family_table = "counts_CC/repeats/bgtables/internal/family/{experiment}.{sample_label}.tsv.gz",
+
+# Combine IP to internal "AS_INPUT"
+use rule count_repeat_tables as combine_ip_to_bg with:
+    input:
+        unique_repeats = config['REPEAT_TABLE'].replace(".tsv", ".sort.unique.bed"),
+        replicate_counts = lambda wildcards: expand(
+            "counts/repeats/vectors/{libname}.{sample_label}.counts", 
+            libname = experiment_to_libname(wildcards.experiment), 
+            sample_label = [wildcards.sample_label])+expand(
+            "counts/repeats/vectors/{libname}.{bg_sample_label}.counts",
+            libname = experiment_to_libname(wildcards.experiment), 
+            bg_sample_label =[wildcards.bg_sample_label]
+            ),
+    output:
+        name_table = "counts_CC/repeats/bgtables/{bg_sample_label}/name/{experiment}.{sample_label}.tsv.gz",
+        class_table = "counts_CC/repeats/bgtables/{bg_sample_label}/class/{experiment}.{sample_label}.tsv.gz",
+        family_table = "counts_CC/repeats/bgtables/{bg_sample_label}/family/{experiment}.{sample_label}.tsv.gz",
     params:
-        error_out_file = "error_files/combine_ip_to_background.{experiment}.{sample_label}.combine.err",
-        out_file = "stdout/combine_ip_to_background.{experiment}.{sample_label}.combine.out",
-        run_time = "1:00:00",
+        error_out_file = "error_files/make_repeat_count_tables.{experiment}.{sample_label}.{bg_sample_label}.err",
+        out_file = "stdout/make_repeat_count_tables.{experiment}.{sample_label}.{bg_sample_label}.out",
+        run_time = "00:15:00",
         cores = "1",
-        memory = 10000,
-    benchmark: "benchmarks/combine_table/{experiment}.internal.{sample_label}.combine.txt"
-    shell:
-        """
-        paste <(zcat {input.count_table}) {input.bg_counts}| gzip -c > {output.combined_count_table}
-        """
+        memory = 200,
+    benchmark: "benchmarks/counts/{experiment}.{sample_label}.{bg_sample_label}.all_replicates.make_repeat_count_table.txt"
 
 rule call_enriched_re:
     input:
-        table = lambda wildcards: f"counts_CC/repeats/bgtables/internal/"+libname_to_experiment(wildcards.libname)+f".{wildcards.sample_label}.tsv.gz",
+        table = lambda wildcards: f"counts_CC/repeats/bgtables/internal/name/"+libname_to_experiment(wildcards.libname)+f".{wildcards.sample_label}.tsv.gz",
         repeats = config['REPEAT_TABLE'].replace(".tsv", ".sort.unique.bed"),
         parameters = "skipper_CC/clip_model_coef_re/{libname}.{sample_label}.tsv",
     output:
@@ -182,6 +203,7 @@ rule call_enriched_re:
         out_file = "stdout/{libname}.{sample_label}.call_enriched_re.out",
         run_time = "00:25:00",
         memory = 3000,
+        outdir = "skipper_CC",
         cores = 1,
     benchmark: "benchmarks/call_enriched_re/{libname}.{sample_label}.call_enriched_re.txt"
     container:
@@ -195,8 +217,9 @@ rule call_enriched_re:
             {params.input_replicate_label} \
             {wildcards.libname}.{wildcards.sample_label} \
             {wildcards.libname}.{wildcards.sample_label} \
-            skipper_CC
+            {params.outdir}
         """
+
 
 # rule find_reproducible_enriched_re:
 #     input:

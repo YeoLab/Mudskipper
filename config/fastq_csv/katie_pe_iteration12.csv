@@ -1,0 +1,3 @@
+,fastq1,libname,fastq2,experiment
+0,/tscc/nfs/home/mgosztyl/seqdata/20240418_seq_results/igm-storage.ucsd.edu/240415_LH00444_0092_A227CY2LT4/FASTQ/oligoCLIP_Multiplex_1028_Rep1_S8_L004_R1_001.fastq.gz,oligoCLIP_Multiplex_1028_Rep1,/tscc/nfs/home/mgosztyl/seqdata/20240418_seq_results/igm-storage.ucsd.edu/240415_LH00444_0092_A227CY2LT4/FASTQ/oligoCLIP_Multiplex_1028_Rep1_S8_L004_R2_001.fastq.gz,iter12
+1,/tscc/nfs/home/mgosztyl/seqdata/20240418_seq_results/igm-storage.ucsd.edu/240415_LH00444_0092_A227CY2LT4/FASTQ/oligoCLIP_Multiplex_1028_Rep2_S9_L004_R1_001.fastq.gz,oligoCLIP_Multiplex_1028_Rep2,/tscc/nfs/home/mgosztyl/seqdata/20240418_seq_results/igm-storage.ucsd.edu/240415_LH00444_0092_A227CY2LT4/FASTQ/oligoCLIP_Multiplex_1028_Rep2_S9_L004_R2_001.fastq.gz,iter12

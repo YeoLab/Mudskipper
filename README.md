@@ -75,7 +75,8 @@ Follow the below sections to understand what to write in your config.
 - `RBP_TO_RUN_MOTIF`: list of RBP names to run motif analysis. Must be one of the rows in `barcode_csv`.
 - `run_clipper`: True if you want CLIPper outputs (works, but slow)
 - `run_skipper`: True if you want to run Skipper. (usually doesn't work in ABC)
-- `run_comparison`: True if you want to run Piranha
+- `run_comparison`: True if you want to run other peak caller such as Piranha and OmniCLIP
+    - `DB_FILE` and `GENOME_dir`: are the omniclip files. check out their [github](https://github.com/philippdre/omniCLIP) on how to run them
 - debug: True if you want to debug. This tries to blast the unmapped reads.
 
 # Options to Choose Backgrounds

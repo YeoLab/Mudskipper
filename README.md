@@ -14,7 +14,8 @@
 
 
 # How to run. (Using ABC as an example)
-1. Download data from [SRA](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE205536) 
+1. Download data from [SRA](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE205536). 
+    - `utils/download_sra.smk` this script can help you download.
 2. Prepare config and manifest `PATH_TO_YOUR_CONFIG`. Example inputs:
     - config file: `config/preprocess_config/oligose_k562.yaml`
     - manifest: `config/fastq_csv/ABC_2rep.csv`
@@ -25,7 +26,7 @@
 4. Run snakemake
     ```
     snakemake -s snakeABC_SE.smk \
-        --configfile config/preprocess_config/oligose_k562_noalt_smalltest.yaml \
+        --configfile config/preprocess_config/oligose_k562_noalt.yaml \
         --profile profiles/tscc2 \
         -n
     ```
@@ -35,32 +36,31 @@
     - the rest of the options are in `--profile`. Adjust as needed. [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
 
 
-Follow the below sections to understand what to write in your config.
+Refer to the following sections to learn what to include in your configuration.
 # Options for Input files
 - Multiplex Example: 
     - Yeo lab internal pair-end protocol: `config/preprocess_config/oligope_iter5.yaml` 
     - ABC single-end protocol: `config/preprocess_config/ABC_2rep.yaml` 
 - Singleplex Example: 
     - ABC single-end protocol: `config/preprocess_config/oligose_single_rbfox2_hek.yaml`
-    - Yeo lab internal paired-end protocol: /home/hsher/projects/oligoCLIP/config/preprocess_config/oligope_v5_nanos2.yaml
+    - Yeo lab internal paired-end protocol: `config/preprocess_config/oligope_v5_nanos2.yaml`
     - Process 1 type of singleplex per 1 manifest.
 
-## `MANIFEST`: a csv specifying fastq locations, replicates
-- Example: 
+## `MANIFEST`: a CSV file specifying FASTQ file locations and replicate information
+All FASTQ files in the same manifest should have the same combinations of barcodes. For example, if you performed two singleplex experiments—one with barcode 1 and the other with barcode 2—they should be specified in two separate config files.
+- Example files: 
     - Multiplex Example:
         - Yeo lab paired-end: `config/fastq_csv/katie_pe_iteration5.csv`
         - ABC: `config/fastq_csv/ABC_2rep.csv`
     - Singleplex Example:
         - Yeo labe paired-end: `config/fastq_csv/V5_NANOS2.csv`
         - ABC: `/config/fastq_csv/ABC_SLBP_singleplex.csv`
-    - All fastqs in the same manifest should contain the same combinations of barcodes.
-        - For example, you did a 2 singleplexes, one with with barcode 1 the other with barcode 2, it should be two different config.yaml.
 - columns:
     - `fastq1`&`fastq2`: *.fastq.gz file for read1 and read 2
     - `libname`: unique names for each library. Should not contain space, special characters such as #,%,*
     - `experiment`: unique names for experiment. **Rows with the same `experiment` will be treated as replicates.** Should not contain space, special characters such as #,%,*
 
-## `barcode_csv`: specifying barcode sequencing per Antibody/RBP
+## `barcode_csv`: specifies the barcode sequencing information for each Antibody/RBP.
 - Example: `config/barcode_csv/iter5.csv`
 - Notebook to generate this file (Yeolab internal user): `utils/generate barcode-iter5.ipynb`
 - delimiter: `:`
@@ -73,33 +73,36 @@ Follow the below sections to understand what to write in your config.
 # Options to Control Output
 - `WORKDIR`: output directory
 - `RBP_TO_RUN_MOTIF`: list of RBP names to run motif analysis. Must be one of the rows in `barcode_csv`.
+
+Although the Mudskipper paper describes the Dirichlet Multinomial Mixture (DMM) algorithm, this pipeline supports all other peak callers and background models benchmarked in the paper. Below are options for running them. For everyday use, it is recommended to set all of these options to False unless you are specifically trying to regenerate all results.
 - `run_clipper`: True if you want CLIPper outputs (works, but slow)
 - `run_skipper`: True if you want to run Skipper. (usually doesn't work in ABC)
 - `run_comparison`: True if you want to run other peak caller such as Piranha and OmniCLIP
     - `DB_FILE` and `GENOME_dir`: are the omniclip files. check out their [github](https://github.com/philippdre/omniCLIP) on how to run them
-- debug: True if you want to debug. This tries to blast the unmapped reads.
+- `debug`: True if you want to debug. This tries to blast the unmapped reads.
 
 # Options to Choose Backgrounds
-By default if the below are left blank, we run Dirichlet Multinomial Mixture(DMM) for multiplex datasets, where RBPs are explicitly compared with each other. DMM is the best model for multiplex dataset. 
+By default, if the options below are left blank, the pipeline runs the Dirichlet Multinomial Mixture (DMM) algorithm for multiplex datasets, where RBPs are explicitly compared against each other. DMM is the most effective model for multiplex datasets. There is an option to compare to 'internal control' such as a spike-in or IgG etc with a barcode as background.
 
-Unfortunately, DMM doesn't work for singleplex. Calling singleplex binding sites require "external control" (see below). Otherwise it will just stop at the read counting stage.
+Unfortunately, DMM is not compatible with singleplex datasets. Calling binding sites in singleplex datasets requires an 'external control' (see details below). Without an external control, the process will stop at the read counting stage. The best external control according to Mudskipper benchmark is an eCLIP SMInput.
 
-But if you want to add an background library, here is how to do:
+The backgrounds can be applied to other peak callers such as Skipper, CLIPper, and the Beta-Binomial Mixture model.
 
-## "Internal control": a barcode that measures the background. They are in the same `fastq.gz`
-- `AS_INPUT`: if you have a IgG antibody that everything will normalize against, type its name here. Must be one of the rows in `barcode_csv`. This can the background for skipper, CLIPper, and beta-binomial mixture model
+If you want to include a background library, here's how to do it:
 
-## "External control": a library that is NOT in the same fastq as your oligoCLIP/ABC
-- specify them in `external_bam` with name of the library (first line, ex `oligoCLIP_ctrlBead_rep2`), followed by  `file:` and `INFORMATIVE_READ`
+## "Internal control: A barcode that measures background signal, present in the same FASTQ file.
+- `AS_INPUT`: If you have an IgG antibody/spike-in/bead-only control in the multiplex experiment that will serve as the normalization reference, enter its name here. It must be one of the rows in the barcode_csv file. 
+
+## "External control": a library that is NOT in the same fastq as your oligoCLIP/ABC to serve as the background.
+- specify them in `external_bam` with name of the library (first line, ex `eCLIP_SLBP_SMInput`), followed by  `file:` and `INFORMATIVE_READ`
     ```
     # For example:
-    oligoCLIP_ctrlBead_rep2:
-        file: /home/hsher/scratch/oligo_PE_iter7/1022-Rep2/bams/ctrlBead.rmDup.Aligned.sortedByCoord.out.bam
-        INFORMATIVE_READ: 1
+    eCLIP_SLBP_SMInput: 
+        file: /tscc/nfs/home/hsher/ps-yeolab5/ENCODE_k562_noalt/output/bams/dedup/genome_R2/SLBP_IN_1.genome.Aligned.sort.dedup.R2.bam
+        INFORMATIVE_READ: 2
     ```
 - This can be an eCLIP SMInput, total RNA-seq, IgG pull down from another experiment, bead control, spike-ins
-- these will also be used as a background in skipper, CLIPper and beta-binomial mixture model
-- the bams must be processed with the exact same STAR index as `STAR_DIR`, and is recommended to be processed with the same/similar mapping parameters as this repo or skipper.
+- How to generate them? the bams must be processed with the exact same STAR index as `STAR_DIR`, and is recommended to be processed with the same/similar mapping parameters as this repo or skipper.
 
 
 # Preprocessing Options:
@@ -111,7 +114,7 @@ But if you want to add an background library, here is how to do:
 
 # Annotation Options:
 - skipper annotations: [follow skipper instructions](https://github.com/YeoLab/skipper#prerequisites) or generate with [skipper_utils](https://github.com/algaebrown/skipper_utils)
-    - Yeolab internal users: Brian had all sorts of annotations here `/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/`.
+    - Yeolab internal users: Brian had all sorts of annotations here `/tscc/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/`.
 - `CHROM_SIZES`
 - `GENOMEFA`
 

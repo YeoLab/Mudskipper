@@ -1,10 +1,10 @@
+from importlib.resources import path
 import pandas as pd
+import os
 
 container: "docker://continuumio/miniconda3:23.10.0-1"
 workdir: config['WORKDIR']
-
 locals().update(config)
-
 config['UNINFORMATIVE_READ'] = 3 - int(INFORMATIVE_READ) # whether read 1 or read 2 is informative
 
 manifest = pd.read_table(MANIFEST, index_col = False, sep = ',')

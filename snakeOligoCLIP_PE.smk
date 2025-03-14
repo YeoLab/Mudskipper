@@ -1,4 +1,3 @@
-
 from importlib.resources import path
 import pandas as pd
 import os
@@ -6,8 +5,7 @@ import os
 container: "docker://continuumio/miniconda3:23.10.0-1"
 workdir: config['WORKDIR']
 locals().update(config)
-config['UNINFORMATIVE_READ'] = 3-INFORMATIVE_READ
-
+config['UNINFORMATIVE_READ'] = 3 - int(INFORMATIVE_READ)
 
 manifest = pd.read_table(MANIFEST, index_col = False, sep = ',')
 print(manifest)
@@ -17,7 +15,7 @@ assert not barcode_df['barcode'].duplicated().any()
 assert not barcode_df['RBP'].duplicated().any() # cannot have any duplicated RBP names
 assert not barcode_df['RBP'].str.contains(' ').any() # DO NOT CONTAIN white space lah
 assert not manifest['fastq1'].duplicated().any()
-assert not manifest['fastq2'].duplicated().any()
+assert not manifest['fastq2'].duplicated().any() ###!!!### 2 fastqs shows a meaningful difference. 
 assert not manifest['libname'].str.contains(' ').any()
 libnames = manifest['libname'].tolist() 
 
@@ -59,7 +57,6 @@ try:
     os.mkdir('stdout')
 except:
     pass
-
 
 module preprocess:
     snakefile:

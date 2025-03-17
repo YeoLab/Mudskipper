@@ -15,7 +15,7 @@ rule make_repeat_megatable:
         out_file = "stdout/make_repeat_megatable.{libname}.out",
         run_time = "00:45:00",
         cores = "1",
-        memory = 80000,
+        memory = 64000,
     benchmark: "benchmarks/counts/make_repeat_megatable.{libname}.txt"
     container: None
     shell:

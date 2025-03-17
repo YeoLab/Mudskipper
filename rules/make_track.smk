@@ -9,7 +9,7 @@ rule extract_read_two:
         cores = 1,
         error_out_file = "error_files/extract_read2.{sample_label}",
         out_file = "stdout/extract_read2.{sample_label}",
-        memory = 40000,
+        memory = 16000,
     conda:
         "envs/samtools.yaml"
     shell:
@@ -39,7 +39,7 @@ rule CITS_bam_to_bedgraph:
         error_out_file = "error_files/CITS_bedgraph.{sample_label}",
         cores = 1,
         out_file = "stdout/CITS_bedgraph.{sample_label}",
-        memory = 40000,
+        memory = 32000,
     container:
         "docker://howardxu520/skipper:bigwig_1.0"
     shell:
@@ -60,7 +60,7 @@ rule COV_bam_to_bedgraph:
         error_out_file = "error_files/COV_bedgraph.{sample_label}",
         out_file = "stdout/COV_bedgraph.{sample_label}",
         cores = 1,
-        memory = 40000,
+        memory = 32000,
     container:
         "docker://howardxu520/skipper:bigwig_1.0"
     shell:
@@ -81,7 +81,7 @@ rule bedgraph_to_bw:
         error_out_file = lambda wildcards: "error_files/bedgraph2bw."+wildcards.something.replace('/', '.')+".err",
         out_file = lambda wildcards: "stdout/bedgraph2bw."+wildcards.something.replace('/', '.')+".err",
         cores = 1,
-        memory = 80000,
+        memory = 32000,
     container:
         "docker://howardxu520/skipper:bigwig_1.0"
     shell:

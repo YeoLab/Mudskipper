@@ -62,7 +62,7 @@ rule trim_adaptor:
         error_out_file = "error_files/trim_adaptor.{libname}.txt",
         out_file = "stdout/trim_adaptor.{libname}.txt",
         quality_cutoff = config['QUALITY_CUTOFF'],
-        memory = 80000,
+        memory = 64000,
     benchmark: "benchmarks/cutadapt/trim_adaptor.{libname}.txt"
     conda:
         "envs/cutadapt.yaml"
@@ -91,7 +91,7 @@ rule extract_umi:
         run_time = "3:45:00",
         cores = "4",
         umi_pattern = config['umi_pattern'],
-        memory = 80000,
+        memory = 64000,
     benchmark: "benchmarks/umi/extract.{libname}.txt"
     conda:
         "envs/umi_tools.yaml"
@@ -124,7 +124,7 @@ rule demultiplex:
         prefix = "{libname}/fastqs/",
         error_out_file = "error_files/demux.{libname}.txt",
         out_file = "stdout/demux.{libname}.txt",
-        memory = 160000,
+        memory = 64000,
     shell:
         """
         cd {params.prefix}
@@ -148,7 +148,7 @@ rule reverse_complement:
         cores="1",
         out_file = "stdout/revcomp.{libname}.txt",
         error_out_file = "error_files/revcomp.{libname}.txt",
-        memory = 40000,
+        memory = 32000,
     conda:
         "envs/fastx_toolkit.yaml"
     shell:
@@ -168,7 +168,7 @@ rule fastqc_post_trim:
         cores="1",
         error_out_file = "error_files/fastqc.{libname}.txt",
         out_file = "stdout/fastqc.{libname}.txt",
-        memory = 40000,
+        memory = 32000,
     benchmark: "benchmarks/qc/fastqc.{libname}.{sample_label}.txt"
     container:
         "docker://howardxu520/skipper:fastqc_0.12.1"
@@ -191,7 +191,7 @@ rule align_reads:
         star_sjdb = config['STAR_DIR'],
         outprefix = "{libname}/bams/{sample_label}.",
         cores = "8",
-        memory = 320000,
+        memory = 40000,
     benchmark: "benchmarks/align/{libname}.{sample_label}.align_reads_genome.txt"
     container:
         "docker://howardxu520/skipper:star_2.7.10b"
@@ -236,7 +236,7 @@ rule umi_dedup:
         run_time = "06:40:00",
         cores = "4",
         prefix='{libname}/bams/genome/{sample_label}.genome-mapped',
-        memory = 160000,
+        memory = 16000,
     benchmark: "benchmarks/align/dedup.{libname}.{sample_label}.txt"
     container:
         "docker://howardxu520/skipper:umicollapse_1.0.0"
@@ -255,7 +255,7 @@ rule index_bam:
         out_file = "stdout/index_bam",
         run_time = "40:00",
         cores = "1",
-        memory = 40000,
+        memory = 16000,
     conda:
         "envs/samtools.yaml"
     shell:

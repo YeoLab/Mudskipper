@@ -14,7 +14,7 @@ rule sample_background_windows_by_region:
         run_time = "10:00",
         cores = 1,
         window_size =  75,
-        memory = 40000,
+        memory = 8000,
         outdir = lambda wildcards, output: output.variable_windows.split('variable')[0]
     benchmark: "benchmarks/sample_background_windows_by_region/{libname}.{sample_label}.{root_dir}.sample_background_windows_by_region.txt"
     container:
@@ -41,7 +41,7 @@ rule run_homer:
         out_file = "stdout/run_homer.{libname}.{sample_label}.{signal_type}.out",
         run_time = "40:00",
         cores = 1,
-        memory = 40000,
+        memory = 4000,
         outdir = lambda wildcards, output: output.motif.split('finemapped_results')[0]
     container:
         "docker://howardxu520/skipper:Homer_4.11"

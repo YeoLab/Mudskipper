@@ -1,4 +1,6 @@
 .snakemake
 .ipynb_checkpoints
 Module_example_oligose_k562_noalt.yaml
+bam2fastq.smk
+snakeSpIDR.smk
 __pycache__

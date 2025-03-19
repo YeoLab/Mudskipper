@@ -17,9 +17,9 @@
 1. Download data from [SRA](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE205536). 
     - `utils/download_sra.smk` this script can be used to complete the download.
 2. Prepare config and manifest `PATH_TO_YOUR_CONFIG`. Example inputs:
-    - config file: `config/preprocess_config/oligose_k562.yaml`
-    - manifest: `config/fastq_csv/ABC_2rep.csv`
-    - barcode csv: `config/barcode_csv/ABC_barcode.csv`
+    - config file: `config/oligose_k562.yaml`
+    - manifest: `config/ABC_2rep.csv`
+    - barcode csv: `config/ABC_barcode.csv`
 3. Adjust profile for your cluster and computing resource:
     - see profiles/tscc2 as an example
     - for each option, [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)

@@ -172,6 +172,7 @@ use rule count_demultiplex_ultraplex from QC with:
 ############## SKIPPER: GENOME #################
 use rule * from normalization as skipper_*
 use rule * from finemap as fine_*
+
 ############## SKIPPER: REPEAT #################
 use rule * from repeat as re_*
 

@@ -20,7 +20,7 @@ rule fastqc_initial:
         cores="2",
         error_out_file = "error_files/fastqc.{libname}.txt",
         out_file = "stdout/fastqc.{libname}.txt",
-        memory = 40000,
+        memory = 32000,
     benchmark: "benchmarks/qc/fastqc_initial.{libname}.txt"
     container:
         "docker://howardxu520/skipper:fastqc_0.12.1"
@@ -77,7 +77,7 @@ rule trim_adaptor:
         error_out_file = "error_files/trim_adaptor.{libname}.txt",
         quality_cutoff = config['QUALITY_CUTOFF'],
         out_file = "stdout/trim_adaptor.{libname}.txt.txt",
-        memory = 80000,
+        memory = 64000,
     conda:
         "envs/cutadapt.yaml"
     benchmark: "benchmarks/pre/trim_adaptor.{libname}"
@@ -176,7 +176,7 @@ rule demultiplex: ################ never used the trimmed fastq file
         prefix = "{libname}/fastqs/",
         error_out_file = "error_files/demux.{libname}.txt",
         out_file = "stdout/demux.{libname}.txt",
-        memory = 80000,
+        memory = 64000,
     shell:
         """
         cd {params.prefix}
@@ -229,8 +229,6 @@ rule trim_barcode_r1:
         zcat {output.fq2} | grep -v "@" | grep $rev_bar | wc -l >> {output.metric}
         """
 
-
-# TODO, CHECK IF THE TRIMMING IS SUCCESSFUL, CHECK CROSS CONTAMINATION
 rule fastqc_post_trim:
     input:
         fq1=rules.trim_barcode_r1.output.fq1,
@@ -245,7 +243,7 @@ rule fastqc_post_trim:
         outdir="{libname}/fastqc/",
         run_time = "02:09:00",
         cores="1",
-        memory = 40000,
+        memory = 32000,
         error_out_file = "error_files/fastqc.{libname}.txt",
         out_file = "stdout/fastqc.{libname}.txt",
     benchmark: "benchmarks/qc/fastqc.{libname}.{sample_label}.txt"
@@ -270,7 +268,7 @@ rule align_reads:
         error_out_file = "error_files/align.{libname}.{sample_label}.err",
         out_file = "stdout/align.{libname}.{sample_label}.out",
         run_time = "02:00:00",
-        memory = 160000,
+        memory = 40000,
         star_sjdb = config['STAR_DIR'],
         outprefix = "{libname}/bams/{sample_label}.",
         cores = "8",
@@ -316,7 +314,7 @@ rule index_bam:
         out_file = "stdout/index_bam",
         run_time = "40:00",
         cores = "1",
-        memory = 40000,
+        memory = 16000,
     conda:
         "envs/samtools.yaml"
     shell:

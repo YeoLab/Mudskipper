@@ -118,7 +118,7 @@ rule make_read_count_summary:
         out_file = "stdout/{libname}.read_count_summary.out",
         run_time = "1:20:00",
         cores = 1,
-        memory = 40000,
+        memory = 32000,
     run:
         import os
         print(output.region_summary)
@@ -243,7 +243,7 @@ rule summary_QC_statistics:
         out_file = "stdout/QC_summary",
         run_time = "00:20:00",
         cores = 1,
-        memory = 20000,
+        memory = 16000,
     run:
         import pandas as pd
         import re
@@ -334,7 +334,7 @@ rule summary_QC_statistics:
 
         # generate dedup summary: is the sum of read 1 and read2
         dup_df['libname']=dup_df['dup_bam'].str.split('/', expand = True)[0]
-        dup_summary_df=dup_df.groupby(by = ['libname'])['before_dedup', 'after_dedup'].sum()
+        dup_summary_df=dup_df.groupby(by = ['libname'])[['before_dedup', 'after_dedup']].sum()
         dup_summary_df['% Unique frag']=100*dup_summary_df['after_dedup']/dup_summary_df['before_dedup']
 
         # generate repeat counts summary

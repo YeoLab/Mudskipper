@@ -1,3 +1,4 @@
 .snakemake
 .ipynb_checkpoints
+Module_example_oligose_k562_noalt.yaml
 __pycache__

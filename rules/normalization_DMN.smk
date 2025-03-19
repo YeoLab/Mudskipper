@@ -29,7 +29,7 @@ rule fit_beta_mixture_model_CC:
         out_file = "stdout/fit_betaCC.{libname}.{clip_sample_label}.out",
         run_time = "02:40:00",
         cores = "1",
-        memory = 80000,
+        memory = 64000,
         root_folder = lambda wildcards, output: Path(output[0]).parent
     conda:
         "envs/DMN.yaml"
@@ -63,7 +63,7 @@ rule analyze_beta_mixture_results_CC:
         run_time = "00:40:00",
         cores = "1",
         root_folder = lambda wildcards, output: Path(output[0]).parent,
-        memory = 40000,
+        memory = 32000,
     conda:
         "envs/tensorflow.yaml"
     benchmark: "benchmarks/DMN/analyze.{libname}.{clip_sample_label}"
@@ -93,7 +93,7 @@ rule fit_beta_mixture_model_another_lib:
         run_time = "00:40:00",
         cores = "1",
         root_folder = lambda wildcards, output: Path(output[0]).parent,
-        memory = 80000,
+        memory = 64000,
     conda:
         "envs/DMN.yaml"
     benchmark: "benchmarks/DMN/fit_model.{libname}.{clip_sample_label}.{bg_sample_label}"
@@ -127,7 +127,7 @@ rule analyze_beta_mixture_results_another_lib:
         run_time = "00:40:00",
         cores = "1",
         root_folder = lambda wildcards, output: Path(output[0]).parent,
-        memory = 40000,
+        memory = 32000,
     conda:
         "envs/tensorflow.yaml"
     benchmark: "benchmarks/DMN/analyze.{libname}.{clip_sample_label}.{bg_sample_label}"
@@ -171,7 +171,7 @@ rule make_window_by_barcode_table:
         out_file = "stdout/window_by_barcode_table.{libname}.out",
         run_time = "20:00",
         cores = 1,
-        memory = 40000,
+        memory = 8000,
     shell:
         """
         paste -d '\t' {input.counts} | gzip  > {output.counts}
@@ -191,7 +191,7 @@ rule fit_DMN:
         error_out_file = "error_files/fit_DMM.{libname}.err",
         out_file = "stdout/DMM.{libname}.internal.out",
         run_time = "48:00:00",
-        memory = 40000,
+        memory = 32000,
         cores = "4",
         root_folder = "DMM",
     benchmark: "benchmarks/DMM/fit.{libname}"
@@ -224,7 +224,7 @@ rule analyze_DMN:
         out_file = "stdout/analyze_DMN.{libname}.out",
         run_time = "2:00:00",
         cores = "1",
-        memory = 80000,
+        memory = 32000,
     benchmark: "benchmarks/DMM/analysis.{libname}"
     conda:
         "envs/tensorflow.yaml"
@@ -249,7 +249,7 @@ rule softmask:
         out_file = "stdout/softmask.{libname}.out",
         run_time = "2:00:00",
         cores = "1",
-        memory = 80000,
+        memory = 32000,
     benchmark: "benchmarks/DMM/softmask.{libname}"
     conda:
         "envs/tensorflow.yaml"
@@ -286,7 +286,7 @@ rule fit_beta_gc_aware:
         out_file = "stdout/beta-mixture_GC.{libname}.{clip_sample_label}.{external_label}.internal.out",
         run_time = "2:00:00",
         cores = "2",
-        memory = 80000,
+        memory = 32000,
         root_folder = "beta-mixture_external/{external_label}",
 
     benchmark: "benchmarks/DMM/fit-beta-mixture_GC.{libname}.{clip_sample_label}.{external_label}"
@@ -318,7 +318,7 @@ rule analyze_beta_GC_aware:
         run_time = "1:00:00",
         cores = "1",
         root_folder = "beta-mixture_external/{external_label}",
-        memory = 80000,
+        memory = 32000,
     benchmark: "benchmarks/DMM/analyze-beta-mixture_GC.{libname}.{clip_sample_label}.{external_label}"
     conda:
         "envs/tensorflow.yaml"

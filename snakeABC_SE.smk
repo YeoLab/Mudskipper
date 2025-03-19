@@ -1,10 +1,10 @@
+from importlib.resources import path
 import pandas as pd
+import os
 
 container: "docker://continuumio/miniconda3:23.10.0-1"
 workdir: config['WORKDIR']
-
 locals().update(config)
-
 config['UNINFORMATIVE_READ'] = 3 - int(INFORMATIVE_READ) # whether read 1 or read 2 is informative
 
 manifest = pd.read_table(MANIFEST, index_col = False, sep = ',')
@@ -209,7 +209,7 @@ use rule CITS_bam_to_bedgraph from make_track as CITS_bedgraph_external with:
         error_out_file = "error_files/CIT_bedgraph.{external_label}",
         out_file = "stdout/CITS_bedgraph.{external_label}",
         cores = 1,
-        memory = 40000,
+        memory = 32000,
 
 use rule COV_bam_to_bedgraph from make_track as COV_bedgraph_external with:
     input:
@@ -222,7 +222,7 @@ use rule COV_bam_to_bedgraph from make_track as COV_bedgraph_external with:
         error_out_file = "error_files/COV_bedgraph.{external_label}",
         out_file = "stdout/COV_bedgraph.{external_label}",
         cores = 1,
-        memory = 40000,
+        memory = 32000,
 
 use rule bedgraph_to_bw from make_track
 
@@ -230,9 +230,7 @@ use rule bedgraph_to_bw from make_track
 use rule * from merge_bw
 
 ########## HOMER ############
-
 use rule * from analysis
-
 
 ######## COMPARE ###########
 use rule * from compare

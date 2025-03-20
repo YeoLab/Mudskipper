@@ -127,7 +127,7 @@ def main(outstem_gc, raw_counts):
     return results, metadata
 
 if __name__=='__main__':
-    basedir = Path(sys.argv[1]) # internal_output/DMN
+    basedir = Path(sys.argv[1]) # internal_output/DMM
     outstem = sys.argv[2] # K562_rep4.RBFOX2
     
     exp, rbp = outstem.split('.')

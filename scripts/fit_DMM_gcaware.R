@@ -82,7 +82,7 @@ fit_beta_binom_mixture <- function(count_df, basedir, out_stem){
      plot(lplc, type="b", xlab="Number of Dirichlet Components(k)",ylab="Model Fit(Laplace)")
      dev.off()
 
-      # find the best model: the DMN object
+      # find the best model: the DMM object
      (best <- fit[[which.min(bic)]])
 
     ################ CLUSTER SIZE ################
@@ -102,7 +102,7 @@ fit_beta_binom_mixture <- function(count_df, basedir, out_stem){
     names(fitted_df_null) <- c('rowname', 'single_component_weight')
     write_tsv(fitted_df_null, file.path(basedir, paste0(out_stem, '.null.alpha.tsv')))
 
-    # how does the model differ from a single component DMN
+    # how does the model differ from a single component DMM
     p0 <- fitted(fit[[1]], scale=TRUE) # scale by theta
     p_best <- fitted(best, scale=TRUE)
     colnames(p_best) <- paste("m", 1:ncol(p_best), sep="")

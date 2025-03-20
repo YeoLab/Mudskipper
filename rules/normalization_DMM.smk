@@ -32,11 +32,11 @@ rule fit_beta_mixture_model_CC:
         memory = 64000,
         root_folder = lambda wildcards, output: Path(output[0]).parent
     conda:
-        "envs/DMN.yaml"
+        "envs/DMM.yaml"
     benchmark: "benchmarks/DMM/fit_beta.{libname}.{clip_sample_label}"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}/fit_DMN.R \
+        Rscript --vanilla {SCRIPT_PATH}/fit_DMM.R \
             {input.table} \
             {input.feature_annotations} \
             {wildcards.libname}.{wildcards.clip_sample_label} \
@@ -66,7 +66,7 @@ rule analyze_beta_mixture_results_CC:
         memory = 32000,
     conda:
         "envs/tensorflow.yaml"
-    benchmark: "benchmarks/DMN/analyze.{libname}.{clip_sample_label}"
+    benchmark: "benchmarks/DMM/analyze.{libname}.{clip_sample_label}"
     shell:
         """
         python {SCRIPT_PATH}/analyze_betabinom_mixture_most_enriched.py \
@@ -95,11 +95,11 @@ rule fit_beta_mixture_model_another_lib:
         root_folder = lambda wildcards, output: Path(output[0]).parent,
         memory = 64000,
     conda:
-        "envs/DMN.yaml"
-    benchmark: "benchmarks/DMN/fit_model.{libname}.{clip_sample_label}.{bg_sample_label}"
+        "envs/DMM.yaml"
+    benchmark: "benchmarks/DMM/fit_model.{libname}.{clip_sample_label}.{bg_sample_label}"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}/fit_DMN.R \
+        Rscript --vanilla {SCRIPT_PATH}/fit_DMM.R \
             {input.table} \
             {input.feature_annotations} \
             {wildcards.libname}.{wildcards.clip_sample_label} \
@@ -130,7 +130,7 @@ rule analyze_beta_mixture_results_another_lib:
         memory = 32000,
     conda:
         "envs/tensorflow.yaml"
-    benchmark: "benchmarks/DMN/analyze.{libname}.{clip_sample_label}.{bg_sample_label}"
+    benchmark: "benchmarks/DMM/analyze.{libname}.{clip_sample_label}.{bg_sample_label}"
     shell:
         """
         python {SCRIPT_PATH}/analyze_betabinom_mixture_most_enriched.py \
@@ -177,7 +177,7 @@ rule make_window_by_barcode_table:
         paste -d '\t' {input.counts} | gzip  > {output.counts}
         """
 
-rule fit_DMN:
+rule fit_DMM:
     input:
         feature_annotations = config['FEATURE_ANNOTATIONS'],
         table = "counts/genome/megatables/{libname}.tsv.gz",
@@ -196,17 +196,17 @@ rule fit_DMN:
         root_folder = "DMM",
     benchmark: "benchmarks/DMM/fit.{libname}"
     conda:
-        "envs/DMN.yaml"
+        "envs/DMM.yaml"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}/fit_DMN_multidimen.R \
+        Rscript --vanilla {SCRIPT_PATH}/fit_DMM_multidimen.R \
             {input.table} \
             {input.feature_annotations} \
             {params.root_folder} \
             {wildcards.libname} 
         """
 
-rule analyze_DMN:
+rule analyze_DMM:
     input:
         "DMM/{libname}.alpha.tsv",
         "DMM/{libname}.mixture_weight.tsv",
@@ -220,8 +220,8 @@ rule analyze_DMN:
         libname = ["{libname}"]),
         "DMM/{libname}.megaoutputs.tsv"
     params:
-        error_out_file = "error_files/analyze_DMN.{libname}.err",
-        out_file = "stdout/analyze_DMN.{libname}.out",
+        error_out_file = "error_files/analyze_DMM.{libname}.err",
+        out_file = "stdout/analyze_DMM.{libname}.out",
         run_time = "2:00:00",
         cores = "1",
         memory = 32000,
@@ -291,10 +291,10 @@ rule fit_beta_gc_aware:
 
     benchmark: "benchmarks/DMM/fit-beta-mixture_GC.{libname}.{clip_sample_label}.{external_label}"
     conda:
-        "envs/DMN.yaml"
+        "envs/DMM.yaml"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}/fit_DMN_gcaware.R \
+        Rscript --vanilla {SCRIPT_PATH}/fit_DMM_gcaware.R \
             {input.table} \
             {input.feature_annotations} \
             {input.gc} \

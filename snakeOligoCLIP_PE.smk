@@ -75,9 +75,9 @@ module normalization:
     config:
         config
 
-module DMN:
+module DMM:
     snakefile:
-        "rules/normalization_DMN.smk"
+        "rules/normalization_DMM.smk"
     config:
         config
 
@@ -99,9 +99,9 @@ module analysis:
     config:
         config
 
-module repeat_dmn:
+module repeat_DMM:
     snakefile:
-        "rules/repeat_DMN.smk"
+        "rules/repeat_DMM.smk"
     config:
         config
 
@@ -166,11 +166,11 @@ use rule * from normalization as skipper_*
 ### repeat caller ###
 use rule * from repeat as re_*
 
-############## DMN #################
-use rule * from DMN as dmn_*
-use rule * from repeat_dmn as redmn_*
+############## DMM #################
+use rule * from DMM as dmm_*
+use rule * from repeat_DMM as redmm_*
 
-############## DMN #################
+############## DMM #################
 use rule * from clipper as clipper_*
 use rule * from clipper_analysis
 

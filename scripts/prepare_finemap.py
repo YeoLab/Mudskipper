@@ -23,10 +23,10 @@ python /home/hsher/projects/oligoCLIP/scripts/prepare_finemap.py \
         --ipplus /home/hsher/scratch/ABC_2rep_skipper_k562window/K562_rep4/bw/COV/RBFOX2.pos.bw \
         --inminus /home/hsher/scratch/ABC_2rep_skipper_k562window/K562_rep4/bw_bg/COV/RBFOX2.neg.bw \
         --inplus /home/hsher/scratch/ABC_2rep_skipper_k562window/K562_rep4/bw_bg/COV/RBFOX2.pos.bw \
-        --region /home/hsher/scratch/ABC_2rep_skipper_k562window/internal_output/DMN/K562_rep4.RBFOX2.enriched_window.tsv \
+        --region /home/hsher/scratch/ABC_2rep_skipper_k562window/internal_output/DMM/K562_rep4.RBFOX2.enriched_window.tsv \
         --bed test.bed
 
-python ~/projects/oligoCLIP/scripts/prepare_finemap.py --ipminus K562_rep4/bw/COV/PRPF8.neg.bw --ipplus K562_rep4/bw/COV/PRPF8.pos.bw --inminus K562_rep4/bw_bg/COV/PRPF8.neg.bw --inplus K562_rep4/bw_bg/COV/PRPF8.pos.bw --region internal_output/DMN/K562_rep4.PRPF8.enriched_window.tsv --bed testprpf.bed
+python ~/projects/oligoCLIP/scripts/prepare_finemap.py --ipminus K562_rep4/bw/COV/PRPF8.neg.bw --ipplus K562_rep4/bw/COV/PRPF8.pos.bw --inminus K562_rep4/bw_bg/COV/PRPF8.neg.bw --inplus K562_rep4/bw_bg/COV/PRPF8.pos.bw --region internal_output/DMM/K562_rep4.PRPF8.enriched_window.tsv --bed testprpf.bed
 '''
 
 

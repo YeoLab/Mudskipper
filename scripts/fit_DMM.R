@@ -5,83 +5,56 @@ library(tidyverse)
 
 args = commandArgs(trailingOnly=TRUE)
 
-# Rscript --vanilla /home/hsher/projects/oligoCLIP/scripts/fit_DMN_multidimen.R \
-# /home/hsher/scratch/oligo_PE_iter5/DMN/table/oCLIP_10_1.tsv.gz \
-# /projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz \
-# /home/hsher/scratch/oligo_PE_iter5/DMN/output \
-# oCLIP_10_1
 # INPUTs
 fl=args[1] #'/home/hsher/scratch/oligo_PE_iter4/internal_output/counts/genome/bgtables/internal/iter4.PRPF8.tsv.gz'
-annotation = args[2]
-basedir= args[3] #'/home/hsher/scratch/oligo_PE_iter4_PRPF8_internal'
-out_stem = args[4] #'iter4.PRPF8.Rep1'
+annotation = args[2] # '/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz'
+ip_col = args[3]
+in_col = args[4]
+basedir= args[5] #'/home/hsher/scratch/oligo_PE_iter4_PRPF8_internal'
+out_stem = args[6] #'iter4.PRPF8.Rep1'
 dir.create(basedir, showWarnings = FALSE, recursive = TRUE)
 
-# fl = '/home/hsher/scratch/oligo_PE_iter5/DMN/table/oCLIP_10_1.tsv.gz'
-# annotation = '/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz'
-# basedir='/home/hsher/scratch/oligo_PE_iter5/DMN/output'
-# out_stem='oCLIP_10_1'
+sample_cols = c(ip_col, in_col)
+print(sample_cols)
 
+# Parameters
 options(width=70, digits=2)
 full <- TRUE ### TODO: change to TRUE
 .qualitative <- DirichletMultinomial:::.qualitative
 dev.off <- function(...) invisible(grDevices::dev.off(...))
-
 min_component = 1
-max_component = 50 #### How to estimate this?
-component_gap = 5
-min_read = 10 
+max_component = 5
+component_gap = 1
+comp_attempt = seq(min_component, max_component, component_gap)
+min_read = 10 # IgG had only 1 component when min_read = 0, CC was fine
+fr_over_total = 6
 
-
-
+# filter read count
 count_df = read_tsv(fl)
-sample_cols = colnames(count_df)
-count_df$name=row.names(count_df)
-
 print(head(count_df))
-count_df = count_df[rowSums(count_df[,sample_cols])>min_read, ]
-count <- as.matrix(count_df[, sample_cols]) 
+
+
+count_df = count_df[rowSums(count_df[sample_cols])>min_read, ]
+# select by average fraction of reads instead of total reads. This might benefit lowly sequenced RBP
+# average_fraction <- rowSums(t(t(count_df[sample_cols])/colSums(count_df[sample_cols])))/length(sample_cols)
+# count_df = count_df[average_fraction>fr_over_total/nrow(count_df), ]
+
+count <- as.matrix(count_df[sample_cols]) # don't need to t because we have different orientation
 print('count matrix nrows=')
 print(nrow(count))
 
 print('count matrix ncol=')
 print(ncol(count))
 
-# sample rows
-################ MODEL SELECTION: SAMPLING ################
-# sampled_counts = count[sample(nrow(count),size=500,replace=FALSE),]
-
-# library(parallel)
-# if (full) {
-# sample_fit <- mclapply(seq(min_component, max_component, component_gap), dmn, count=sampled_counts, verbose=TRUE)
-# save(sample_fit, file=file.path(basedir, paste0(out_stem, ".sample_fit.rda")))
-# } else load(file = file.path(basedir, paste0(out_stem, ".sample_fit.rda")))
-
-# # plot Laplace against k
-# lplc <- sapply(sample_fit, laplace)
-# aic <- sapply(sample_fit, AIC)
-# bic <- sapply(sample_fit, BIC)
-#  pdf(file.path(basedir, paste0(out_stem, ".goodness_of_sample_fit.pdf")))
-#  plot(aic, type="b", xlab="Number of Dirichlet Components(k)",ylab="AIC")
-#  plot(bic, type="b", xlab="Number of Dirichlet Components(k)",ylab="BIC")
-#  plot(lplc, type="b", xlab="Number of Dirichlet Components(k)",ylab="Model Fit(Laplace)")
-#  dev.off()
-
-#   # find the best model: the DMN object
-#  (best <- sample_fit[[which.min(lplc)]])
-
-################ MODEL SELECTION ################
-
 # fit data k=1 to max_component, using a subset of data
 library(parallel)
-library(parallel)
-cores = detectCores()
+cores = min(detectCores(), length(comp_attempt))
 if (full) {
-fit <- mclapply(seq(min_component, max_component, component_gap), dmn, count=count, verbose=TRUE, mc.cores = cores)
+fit <- mclapply(comp_attempt, dmn, count=count, verbose=TRUE, mc.cores = cores)
 save(fit, file=file.path(basedir, paste0(out_stem, ".fit.rda")))
 } else load(file = file.path(basedir, paste0(out_stem, ".fit.rda")))
 
-
+################ MODEL SELECTION ################
 
 
 
@@ -95,8 +68,8 @@ bic <- sapply(fit, BIC)
  plot(lplc, type="b", xlab="Number of Dirichlet Components(k)",ylab="Model Fit(Laplace)")
  dev.off()
 
-  # find the best model: the DMN object
- (best <- fit[[which.min(bic)]]) ## better estimation of binding score!
+  # find the best model: the DMM object
+ (best <- fit[[which.min(bic)]])
 
 ################ CLUSTER SIZE ################
 # reports the weight $\pi$ and $\theta$
@@ -115,7 +88,7 @@ fitted_df_null = data.frame(fitted(fit[[1]], assign = FALSE))%>% rownames_to_col
 names(fitted_df_null) <- c('rowname', 'single_component_weight')
 write_tsv(fitted_df_null, file.path(basedir, paste0(out_stem, '.null.alpha.tsv')))
 
-# how does the model differ from a single component DMN
+# how does the model differ from a single component DMM
 p0 <- fitted(fit[[1]], scale=TRUE) # scale by theta
 p_best <- fitted(best, scale=TRUE)
 colnames(p_best) <- paste("m", 1:ncol(p_best), sep="")

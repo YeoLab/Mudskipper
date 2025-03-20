@@ -67,9 +67,9 @@ print(f'RBPs: {rbps}',
 #     config:
 #         config
 
-# module DMN:
+# module DMM:
 #     snakefile:
-#         "rules/normalization_DMN.smk"
+#         "rules/normalization_DMM.smk"
 #     config:
 #         config
 

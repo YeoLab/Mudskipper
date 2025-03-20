@@ -29,7 +29,7 @@ rule make_repeat_megatable:
         "paste <(zcat {input.unique_repeats} | awk -v OFS=\"\\t\" 'BEGIN {{print \"repeat_family\";}} {{print $9}}') {input.replicate_counts} | "
             "awk -v OFS=\"\\t\" 'NR > 1 {{for(i = 2; i <= NF; i++) {{tabulation[$1][i] += $i}} }} END {{for(name in tabulation) {{ printf name; for(i = 2; i <= NF; i++) {{printf \"\\t\" tabulation[name][i]}} print \"\";}} }}' | sort -k 1,1 | gzip >> {output.family_table};"
 
-rule fit_DMN:
+rule fit_DMM:
     input:
         table = "counts/repeats/megatables/{repeat_type}/{libname}.tsv.gz",
     output:
@@ -47,16 +47,16 @@ rule fit_DMN:
         root_folder = lambda wildcards, output: Path(output[0]).parent
     benchmark: "benchmarks/DMM/fit.{libname}.{repeat_type}"
     conda:
-        "envs/DMN.yaml"
+        "envs/DMM.yaml"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}/fit_DMN_multidimen_repeat.R \
+        Rscript --vanilla {SCRIPT_PATH}/fit_DMM_multidimen_repeat.R \
             {input.table} \
             {params.root_folder} \
             {wildcards.libname} 
         """
 
-rule analyze_DMN:
+rule analyze_DMM:
     input:
         "DMM_repeat/{repeat_type}/{libname}.goodness_of_fit.pdf",
         "DMM_repeat/{repeat_type}/{libname}.alpha.tsv",

@@ -62,7 +62,8 @@ R_EXE: /projects/ps-yeolab4/software/R-4.1.2/bin/Rscript
 REPEAT_TABLE: /projects/ps-yeolab3/eboyle/encode/pipeline/05_20220720/repeatmasker.grch38.tsv.gz
 
 
-#
+# Read type: Either "paired" for paired end or "single" for single end. 
+READ_TYPE = "single"
 # Single-end: enter 1. Paired-end: enter read (1 or 2) corresponding to crosslink site
 INFORMATIVE_READ: 1
 

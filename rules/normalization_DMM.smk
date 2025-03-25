@@ -191,8 +191,8 @@ rule fit_DMM:
         error_out_file = "error_files/fit_DMM.{libname}.err",
         out_file = "stdout/DMM.{libname}.internal.out",
         run_time = "48:00:00",
-        memory = 32000,
-        cores = "4",
+        memory = 40000,
+        cores = "8",
         root_folder = "DMM",
     benchmark: "benchmarks/DMM/fit.{libname}"
     conda:

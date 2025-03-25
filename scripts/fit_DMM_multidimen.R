@@ -2,6 +2,7 @@ library(DirichletMultinomial)
 library(lattice)
 library(xtable)
 library(tidyverse)
+library(parallel)
 
 args = commandArgs(trailingOnly=TRUE)
 
@@ -28,7 +29,7 @@ full <- TRUE ### TODO: change to TRUE
 dev.off <- function(...) invisible(grDevices::dev.off(...))
 
 min_component = 1
-max_component = 50 #### How to estimate this?
+max_component = 40 #### How to estimate this?
 component_gap = 5
 min_read = 10 
 
@@ -73,17 +74,11 @@ print(ncol(count))
 ################ MODEL SELECTION ################
 
 # fit data k=1 to max_component, using a subset of data
-library(parallel)
-library(parallel)
 cores = detectCores()
 if (full) {
 fit <- mclapply(seq(min_component, max_component, component_gap), dmn, count=count, verbose=TRUE, mc.cores = cores)
 save(fit, file=file.path(basedir, paste0(out_stem, ".fit.rda")))
 } else load(file = file.path(basedir, paste0(out_stem, ".fit.rda")))
-
-
-
-
 
 # plot Laplace against k
 lplc <- sapply(fit, laplace)

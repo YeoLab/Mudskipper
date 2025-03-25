@@ -50,6 +50,7 @@ if len(rbps)==1:
     singleplex = True
 else:
     singleplex = False
+
 # making the error files directory
 try:
     os.mkdir('error_files')
@@ -62,20 +63,20 @@ try:
 except:
     pass
 
-module preprocess:
-    snakefile:
-        "rules/se_preprocess.smk"
-    config: config
+if READ_TYPE == "paired":
+    module preprocess:
+        snakefile:
+            "rules/pe_preprocess.smk"
+        config: config
+elif READ_TYPE == "single":
+    module preprocess:
+        snakefile:
+            "rules/se_preprocess.smk"
+        config: config
 
 module QC:
     snakefile:
         "rules/QC.smk"
-    config:
-        config
-
-module normalization:
-    snakefile:
-        "rules/skipper.smk"
     config:
         config
 
@@ -121,34 +122,22 @@ module analysis:
     config:
         config
 
-module clipper:
+module normalization:
     snakefile:
-        "rules/clipper.smk"
+        "rules/skipper.smk"
     config:
         config
-
-module clipper_analysis:
-    snakefile:
-        "rules/clipper_analysis.smk"
-    config:
-        config
-
-module compare:
-    snakefile:
-        "rules/compare.smk"
-    config:
-        config
-
 
 include: "generate_output.py"
 rule all:
     input:
-        get_output(config['run_clipper'], config['run_skipper'], config['run_comparison'])
+        get_output(config['DMM'], config['BBM'])
     
 ############## PREPROCESS #################
 use rule * from preprocess as pre_*
 
 ############## QUALITY CONTROL #################
+
 use rule * from QC as qc_*
 
 if READ_TYPE == "paired":
@@ -183,20 +172,14 @@ elif READ_TYPE == "single":
             fq1=expand("{libname}/fastqs/ultraplex_demux_{sample_label}.fastq.gz", 
             libname = libnames, sample_label = rbps)
 
-############## SKIPPER: GENOME #################
-use rule * from normalization as skipper_*
+############## Normalization and finemapping #################
+use rule * from normalization as normalization_*
 use rule * from finemap as fine_*
-
-############## SKIPPER: REPEAT #################
 use rule * from repeat as re_*
 
 ############## DMM #################
 use rule * from DMM as dmm_*
 use rule * from repeat_DMM as redmm_*
-
-############## Clipper #################
-use rule * from clipper as clipper_*
-use rule * from clipper_analysis as clipper_analysis_*
 
 ############## BIGWIGS #################
 if READ_TYPE == "paired":
@@ -297,6 +280,3 @@ use rule * from merge_bw
 
 ########## HOMER ############
 use rule * from analysis
-
-######## COMPARE ###########
-use rule * from compare

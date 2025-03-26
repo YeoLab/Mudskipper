@@ -67,8 +67,8 @@ rule finemap_to_bedgraph:
     params:
         error_out_file = lambda wildcards: "error_files/bed2bedgraph."+wildcards.something.replace('/', '.')+".err",
         out_file = lambda wildcards: "stdout/bed2bedgraph."+wildcards.something.replace('/', '.')+".err",
-        run_time = "00:10:00",
-        memory = 10000,
+        run_time = "00:30:00",
+        memory = 16000,
         cores = 1,
     container: None
     shell:

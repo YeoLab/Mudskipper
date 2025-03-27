@@ -5,9 +5,6 @@ args = commandArgs(trailingOnly=TRUE)
 
 count_data = read_tsv(args[1], col_names = c("chr","start","end","name","score","strand","window_n","input","clip"), 
 col_types = c("ciiciccii"), comment = '#')
-# f ='internal_output/finemapping/nt_coverage/CITS/Rep2.QKI.nt_coverage.bed'
-# count_data = read_tsv(f, col_names = c("chr","start","end","name","score","strand","window_n","input","clip"), 
-# col_types = c("ciiciccii"), comment = '#')
 output_directory = args[2]
 output_stem = args[3]
 window_size = 75
@@ -40,7 +37,6 @@ if(nrow(smoothed_data) == 0) {
 print(nrow(smoothed_data))
 
 # function to find local maxima
-# https://stackoverflow.com/questions/6836409/finding-local-maxima-and-minima
 localMaxima = function(x) {
   if(length(x) == 1) {
     return(1)
@@ -65,7 +61,6 @@ candidate_sites = smoothed_data %>%
         mutate(top_pos = enrichment_heuristic == max(enrichment_heuristic)) %>% 
         mutate(pos_selected = ifelse(sum(top_pos) > 1, sample(pos[top_pos], 1), pos[top_pos])) %>% 
         mutate(finemapped = pos == pos_selected, rank = ifelse(pos == pos_selected, 1, NA)) %>%
-        # mutate(principal_window = (pos >= pos_principal - 12) & (pos <= pos_principal + 12), 
         mutate(claimed = ((pos >= pos_selected - window_size) & (pos <= pos_selected + window_size))) %>% 
         mutate(local_maximum = row_number() %in% localMaxima(enrichment_heuristic) | finemapped) %>%
         filter(enrichment_heuristic > enrichment_median, local_maximum) 

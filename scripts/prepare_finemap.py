@@ -8,29 +8,6 @@ import math
 import pandas as pd
 import numpy as np
 
-# python scripts/region_breakdown.py \
-# --ip1plus=/home/hsher/scratch/ENCODE_CITS/CITS/548_CLIP1.plus.bw \
-# --ip1minus=/home/hsher/scratch/ENCODE_CITS/CITS/548_CLIP1.minus.bw \
-# --ip2minus=/home/hsher/scratch/ENCODE_CITS/CITS/548_CLIP2.minus.bw \
-# --ip2plus=/home/hsher/scratch/ENCODE_CITS/CITS/548_CLIP2.plus.bw \
-# --inminus=/home/hsher/scratch/ENCODE_CITS/CITS/548_INPUT1.minus.bw \
-# --inplus=/home/hsher/scratch/ENCODE_CITS/CITS/548_INPUT1.plus.bw \
-# --region=/home/hsher/evan_regions/548_ZRANB2_K562.tsv \
-# --bed=/home/hsher/548_ZRANB2_K562.bed
-'''
-python /home/hsher/projects/oligoCLIP/scripts/prepare_finemap.py \
-        --ipminus /home/hsher/scratch/ABC_2rep_skipper_k562window/K562_rep4/bw/COV/RBFOX2.neg.bw \
-        --ipplus /home/hsher/scratch/ABC_2rep_skipper_k562window/K562_rep4/bw/COV/RBFOX2.pos.bw \
-        --inminus /home/hsher/scratch/ABC_2rep_skipper_k562window/K562_rep4/bw_bg/COV/RBFOX2.neg.bw \
-        --inplus /home/hsher/scratch/ABC_2rep_skipper_k562window/K562_rep4/bw_bg/COV/RBFOX2.pos.bw \
-        --region /home/hsher/scratch/ABC_2rep_skipper_k562window/internal_output/DMM/K562_rep4.RBFOX2.enriched_window.tsv \
-        --bed test.bed
-
-python ~/projects/oligoCLIP/scripts/prepare_finemap.py --ipminus K562_rep4/bw/COV/PRPF8.neg.bw --ipplus K562_rep4/bw/COV/PRPF8.pos.bw --inminus K562_rep4/bw_bg/COV/PRPF8.neg.bw --inplus K562_rep4/bw_bg/COV/PRPF8.pos.bw --region internal_output/DMM/K562_rep4.PRPF8.enriched_window.tsv --bed testprpf.bed
-'''
-
-
-
 def option_parser():
     ''' return parser
     :return: OptionParser object
@@ -98,10 +75,7 @@ def fetch_values(chrom, start, end, strand, IP_wig, IN_wig):
     data['chr'] = chrom
     data['strand'] = strand
 
-    return data
-    # col_names = c("chr","start","end","name","score","strand","window_n","input","clip")     
-
-
+    return data   
 
 if __name__=='__main__':
     
@@ -113,7 +87,7 @@ if __name__=='__main__':
 
     print(options)
 
-    # load evan's region
+    # load region
     df = pd.read_csv(options.regiontsv, sep = '\t')
 
     try:
@@ -172,8 +146,6 @@ if __name__=='__main__':
         for index, row in merged_significant.iterrows():
             window_values = fetch_values(chrom = row['chr'], start = row['start'], end = row['end'], strand = row['strand'],
                 IP_wig = IP_wig, IN_wig = IN_wig)
-            # print(row)
-            # print(window_values)
             window_values['window_n'] = row['name']
             window_values['score'] = row['qvalue']
             window_values['name'] = row[namecol]

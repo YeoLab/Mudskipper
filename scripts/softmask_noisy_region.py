@@ -95,16 +95,15 @@ def generate_genome_mask(genome_transcript_types_to_mask, genomic_annotation, to
     return deviation_zscore, individual_coef_df
 
 if __name__=='__main__':
-    basedir=  Path(sys.argv[1]) #Path('/home/hsher/scratch/ABC_2rep/')
+    basedir=  Path(sys.argv[1])
     out_stem = Path(sys.argv[2])
     rsquare_threshold = 0.3 # how good the regression has to be
-    zscore_cutoff = 1 # how much does the rbp-rna interaction has to deviate from the noise regression to not be masked
+    zscore_cutoff = 1 # how much does the rbp-rna interaction have to deviate from the noise regression to not be masked
     genomic_annotation = pd.read_csv(Path(sys.argv[3]),
-        #'/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz',
                                     sep = '\t')
     repeat_annotation = pd.read_csv(Path(sys.argv[4]),
-        #'/projects/ps-yeolab3/eboyle/encode/pipeline/05_20220720/repeatmasker.grch38.tsv.gz', 
         sep = '\t')
+    
     ##### read in all the files #####
     # counts
     raw_counts = pd.read_csv(basedir/'counts'/'repeats'/'megatables'/'name'/f'{out_stem}.tsv.gz', sep = '\t', index_col = 0)

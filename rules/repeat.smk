@@ -48,7 +48,6 @@ rule quantify_repeats:
         config['CHROM_SIZES'],
         bam = "{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.bam",
         repeats = rules.uniq_repeats.output.unique_repeats,
-        #repeats = config['REPEAT_TABLE'].replace(".tsv", ".sort.unique.bed")
     output:
         counts = "counts/repeats/vectors/{libname}.{sample_label}.counts"
     params:
@@ -60,8 +59,6 @@ rule quantify_repeats:
         cores = 1,
         uninformative_read = config['UNINFORMATIVE_READ']
     benchmark: "benchmarks/repeats/unassigned_experiment.{libname}.{sample_label}.quantify_repeats.txt"
-    # container:
-    #     "docker://howardxu520/skipper:bigwig_1.0" # keep having problems with TSCC 2.0 with docker
     conda:
         "envs/bedtools.yaml"
     shell:
@@ -124,11 +121,11 @@ rule sum_all_other_background_re:
         awk '{{arr[FNR]+=$1}}END{{for(i=2;i<=FNR;i+=1){{print arr[i]}} }}' {input} | awk 'BEGIN {{print \"{params.replicate_label}\"}} {{print}}' > {output}
         """
 
-rule combine_ip_to_internal_background: # bg_sample_label = 'internal'
+rule combine_ip_to_internal_background:
     input:
         count_table = "counts/repeats/tables/name/{experiment}.{sample_label}.tsv.gz",
         bg_counts = lambda wildcards: expand("counts_CC/repeats/vectors/{libname}.{sample_label}.counts", 
-            libname = experiment_to_libname(wildcards.experiment), # TODO: make dictionary
+            libname = experiment_to_libname(wildcards.experiment), 
             sample_label = [wildcards.sample_label])
     output:
         combined_count_table = "counts_CC/repeats/bgtables/internal/{experiment}.{sample_label}.tsv.gz"

@@ -6,12 +6,12 @@ library(tidyverse)
 args = commandArgs(trailingOnly=TRUE)
 
 # INPUTs
-fl=args[1] #'/home/hsher/scratch/oligo_PE_iter4/internal_output/counts/genome/bgtables/internal/iter4.PRPF8.tsv.gz'
-annotation = args[2] # '/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz'
+fl=args[1] 
+annotation = args[2] 
 ip_col = args[3]
 in_col = args[4]
-basedir= args[5] #'/home/hsher/scratch/oligo_PE_iter4_PRPF8_internal'
-out_stem = args[6] #'iter4.PRPF8.Rep1'
+basedir= args[5]
+out_stem = args[6]
 dir.create(basedir, showWarnings = FALSE, recursive = TRUE)
 
 sample_cols = c(ip_col, in_col)
@@ -19,7 +19,7 @@ print(sample_cols)
 
 # Parameters
 options(width=70, digits=2)
-full <- TRUE ### TODO: change to TRUE
+full <- TRUE 
 .qualitative <- DirichletMultinomial:::.qualitative
 dev.off <- function(...) invisible(grDevices::dev.off(...))
 min_component = 1
@@ -78,8 +78,7 @@ weights = mixturewt(best)
 write_tsv(data.frame(weights) %>% rownames_to_column(), file.path(basedir, paste0(out_stem, '.weights.tsv')))
 
 ################ CLUSTER LABELLING ################
-# contribution of each taxonomic group to the Dirichlet components
-# fitted https://rdrr.io/bioc/DirichletMultinomial/man/fitted.html
+# contribution of each taxonomic group to the Dirichlet components fitted
 fitted_df = data.frame(fitted(best, assign = FALSE))%>% rownames_to_column()
 write_tsv(fitted_df, file.path(basedir, paste0(out_stem, '.alpha.tsv')))
 

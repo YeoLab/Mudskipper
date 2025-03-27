@@ -43,7 +43,7 @@ rule make_genome_count_table:
     input:
         partition=config['PARTITION'],
         replicate_counts = lambda wildcards: expand("counts/genome/vectors/{libname}.{sample_label}.counts", 
-            libname = experiment_to_libname(wildcards.experiment), # TODO: make dictionary
+            libname = experiment_to_libname(wildcards.experiment), 
             sample_label = [wildcards.sample_label]),
     output:
         count_table = "counts/genome/tables/{experiment}.{sample_label}.tsv.gz",
@@ -100,7 +100,7 @@ rule combine_ip_to_CC:
     input:
         count_table = "counts/genome/tables/{experiment}.{clip_sample_label}.tsv.gz",
         bg_counts = lambda wildcards: expand("counts_CC/genome/vectors/{libname}.{clip_sample_label}.counts", 
-            libname = experiment_to_libname(wildcards.experiment), # TODO: make dictionary
+            libname = experiment_to_libname(wildcards.experiment), 
             clip_sample_label = [wildcards.clip_sample_label])
     output:
         combined_count_table = "counts_CC/genome/bgtables/internal/{experiment}.{clip_sample_label}.tsv.gz"

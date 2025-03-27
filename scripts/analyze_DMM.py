@@ -36,8 +36,6 @@ def label_clusters_by_elbow(val, plot = False, ax = None, std = None):
     left_x, left_reg, right_x, right_reg = reg_params[elbow_point]
     
     selected = val.iloc[elbow_point+1:]
-    #print(val.loc[val-left_y>0].sort_values())
-    
     
     if plot:
         if ax is None:
@@ -264,8 +262,8 @@ if __name__=='__main__':
     python /home/hsher/projects/oligoCLIP/scripts/analyze_DMM.py HEK293_rep1
     '''
     
-    out_stem = sys.argv[1] # K562_rep4
-    basedir = Path('.') # 
+    out_stem = sys.argv[1]
+    basedir = Path('.') 
 
     # constants
     logLR_threshold = 2
@@ -273,7 +271,7 @@ if __name__=='__main__':
     fc_raw_thres = 1
 
     # fitted parameters and outputs
-    data = pd.read_csv(basedir/f'DMM/{out_stem}.mixture_weight.tsv', sep = '\t', index_col = 0) # basedir/f'DMM/{out_stem}.mixture_weight.tsv'
+    data = pd.read_csv(basedir/f'DMM/{out_stem}.mixture_weight.tsv', sep = '\t', index_col = 0)
     data.set_index('Row.names', inplace = True)
 
     mixture_weight_only = data.loc[:, data.columns.str.startswith('V')]
@@ -313,6 +311,7 @@ if __name__=='__main__':
 
     # calculate FC over null for each component
     component_fc = (model_mean).div(mapped_reads_fraction, axis = 0).T
+    
     # visualization
     sns.clustermap(component_fc,
             cbar_kws = {'label': 'FC over total mapped reads'},
@@ -347,11 +346,6 @@ if __name__=='__main__':
     ax[2].set_ylabel('# clusters assigned')
     plt.tight_layout()
     plt.savefig(basedir / 'DMM'/ f'{out_stem}.cluster_summary.pdf')
-
-    # low entropy is bad: should not filter because it still contains some individual binding sites
-    # too_low_entropy = ent[ent<0.1].index.tolist()
-    # annotation_summary['filtered']=annotation_summary.index.isin(too_low_entropy)
-    # anno.loc[anno.index.isin(too_low_entropy)] = False
 
     annotation_summary.to_csv(basedir / 'DMM'/ f'{out_stem}.cluster_summary.csv')
     anno.to_csv(basedir / 'DMM'/ f'{out_stem}.cluster_annotation_binary.csv')

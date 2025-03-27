@@ -13,7 +13,7 @@ barcode_df = pd.read_csv(config['barcode_csv'], header = None, sep = ':', names 
 # basic checking
 assert not barcode_df['barcode'].duplicated().any()
 assert not barcode_df['RBP'].duplicated().any() # cannot have any duplicated RBP names
-assert not barcode_df['RBP'].str.contains(' ').any() # DO NOT CONTAIN white space lah
+assert not barcode_df['RBP'].str.contains(' ').any() # DO NOT CONTAIN white space
 if READ_TYPE == "paired":
     assert not manifest['fastq1'].duplicated().any()
     assert not manifest['fastq2'].duplicated().any()

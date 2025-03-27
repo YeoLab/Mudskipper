@@ -4,7 +4,7 @@ rule make_repeat_megatable:
         unique_repeats = config['REPEAT_TABLE'].replace(".tsv", ".sort.unique.bed"),
         replicate_counts = lambda wildcards: expand(
             "counts/repeats/vectors/{libname}.{sample_label}.counts", 
-            libname = ['{libname}'], # TODO: make dictionary
+            libname = ['{libname}'],
             sample_label = list(set(rbps)-set(config['AS_INPUT']))),
     output:
         name_table = "counts/repeats/megatables/name/{libname}.tsv.gz",

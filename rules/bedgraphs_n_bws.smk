@@ -21,7 +21,7 @@ rule extract_read_two:
         else
 
 
-            # # get read2 only
+            # get read2 only
             samtools view -h -f 0x0080 {input.bam} | samtools view -Sb - > {output.read2}
 
             # get read1 only

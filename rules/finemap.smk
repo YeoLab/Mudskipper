@@ -36,8 +36,7 @@ rule get_nt_coverage:
         """
 rule finemap_windows:
     input:
-        nt_coverage = "{root_dir}/finemapping/nt_coverage/{signal_type}/{libname}.{sample_label}.nt_coverage.bed",
-        # col_names = c("chr","start","end","name","score","strand","window_n","input","clip")        
+        nt_coverage = "{root_dir}/finemapping/nt_coverage/{signal_type}/{libname}.{sample_label}.nt_coverage.bed",      
     output:
         finemapped_windows = "{root_dir}/finemapping/mapped_sites/{signal_type}/{libname}.{sample_label}.finemapped_windows.bed.gz"
     params:

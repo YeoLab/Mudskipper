@@ -39,11 +39,11 @@ class Beta_Mixture_Model:
         return 1-self.cdf(k)
 
 if __name__=='__main__':
-    basedir = Path(sys.argv[1]) # internal_output/DMM
-    outstem = sys.argv[2] # K562_rep4.RBFOX2
+    basedir = Path(sys.argv[1]) 
+    outstem = sys.argv[2] 
     
     exp, rbp = outstem.split('.')
-    raw_counts = pd.read_csv(sys.argv[3], sep = '\t') # basedir/f'internal_output/counts/genome/bgtables/internal/{pre}.{rbp}.tsv.gz
+    raw_counts = pd.read_csv(sys.argv[3], sep = '\t') 
     annotation_df = pd.read_csv(sys.argv[4], sep = '\t')
     outdir = basedir
 
@@ -60,7 +60,7 @@ if __name__=='__main__':
     assert len(control_col)==1
     control_col = control_col[0]
 
-    # read files, weights of each component #pi
+    # read files, weights of each component pi
     component_weights = pd.read_csv(basedir/f'{outstem}.weights.tsv', sep = '\t',index_col = 0)
     component_weights.index = ['X'+str(i) for i in component_weights.index]
 
@@ -166,7 +166,6 @@ if __name__=='__main__':
         
         print(f'''======== {outstem} has single component or no enriche comp
         , fall back to hypothesis testing========''')
-        #data = calculate_pvalue(raw_counts, outstem, component_alpha.iloc[:, ], annotation_df)
         # no enriched comp
         
         

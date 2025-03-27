@@ -12,7 +12,7 @@ from analyze_betabinom_mixture_most_enriched import Beta_Mixture_Model
 
 def main(outstem_gc, raw_counts):
 
-    # read files, weights of each component #pi
+    # read files, weights of each component pi
     component_weights = pd.read_csv(basedir/f'{outstem_gc}.weights.tsv', sep = '\t',index_col = 0)
     component_weights.index = ['X'+str(i) for i in component_weights.index]
 
@@ -95,7 +95,6 @@ def main(outstem_gc, raw_counts):
         component_fc.columns = [f'fc.{c}' for c in component_fc.columns]
         metadata = pd.concat([component_fc, model_mean.T, component_alpha.T], axis = 1)
         metadata['selected'] = metadata.index.isin(comp)
-        #metadata.to_csv(outdir / f'{outstem_gc}.label_component.csv')
 
         bg_metadata = pd.concat([mapped_reads,mapped_reads_fraction], axis = 1)
         bg_metadata.columns = ['total_reads', 'fraction_reads']
@@ -105,7 +104,6 @@ def main(outstem_gc, raw_counts):
     else:
         metadata = model_mean
         print(f'======== {outstem} has single component, fall back to hypothesis testing========')
-        #data = calculate_pvalue(raw_counts, outstem, component_alpha.iloc[:, ], annotation_df)
         pvalue=1-betabinom.cdf(n = nread_per_window, 
                                a = component_alpha.loc[outstem].iloc[0], 
                                b = component_alpha.loc[control_col].iloc[0], 
@@ -127,22 +125,14 @@ def main(outstem_gc, raw_counts):
     return results, metadata
 
 if __name__=='__main__':
-    basedir = Path(sys.argv[1]) # internal_output/DMM
-    outstem = sys.argv[2] # K562_rep4.RBFOX2
+    basedir = Path(sys.argv[1]) 
+    outstem = sys.argv[2] 
     
     exp, rbp = outstem.split('.')
-    raw_counts = pd.read_csv(sys.argv[3], sep = '\t') # basedir/f'internal_output/counts/genome/bgtables/internal/{pre}.{rbp}.tsv.gz
+    raw_counts = pd.read_csv(sys.argv[3], sep = '\t')
     annotation_df = pd.read_csv(sys.argv[4], sep = '\t')
     control_col = sys.argv[5]
     outdir = basedir
-
-    # basedir=Path('/tscc/nfs/home/hsher/scratch/SLBP_gc_aware')
-    # outstem='K562_SLBP_rep1.SLBP'
-    # exp, rbp = outstem.split('.')
-    # raw_counts = pd.read_csv(f'/tscc/nfs/home/hsher/scratch/ABC_singleplex_SLBP/counts_external/genome/eCLIP_SLBP_SMInput/K562_SLBP.SLBP.tsv.gz', sep = '\t')
-    # annotation_df = pd.read_csv('/tscc/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz', sep = '\t')
-    # outdir = Path('/tscc/nfs/home/hsher/scratch/beta_test')
-    # control_col = 'external.eCLIP_SLBP_SMInput'
 
     # constants
     component_fold_threshold = 1
@@ -171,7 +161,6 @@ if __name__=='__main__':
     print(results['enriched'].value_counts())
     fcount = pd.pivot_table(results, index = 'feature_type_top', columns = 'enriched', aggfunc = 'size').fillna(0)
     print(fcount)
-    #fcount = results.groupby(by = 'enriched')['feature_type_top'].value_counts().unstack().fillna(0).T
     fcount['Positive rate'] = fcount[True]/(fcount[True]+fcount[False])
     fcount.to_csv(outdir / f'{outstem}.feature_type_summary.tsv', sep = '\t')
 

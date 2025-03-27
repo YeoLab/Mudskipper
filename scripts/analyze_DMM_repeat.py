@@ -37,8 +37,6 @@ def label_clusters_by_elbow(val, plot = False, ax = None, std = None):
     left_x, left_reg, right_x, right_reg = reg_params[elbow_point]
     
     selected = val.iloc[elbow_point+1:]
-    #print(val.loc[val-left_y>0].sort_values())
-    
     
     if plot:
         if ax is None:
@@ -276,7 +274,7 @@ if __name__ == '__main__':
     fc_raw_thres = 1
 
     # fitted parameters and outputs
-    data = pd.read_csv(basedir/'DMM_repeat/name'/f'{out_stem}.mixture_weight.tsv', sep = '\t', index_col = 0) # basedir/f'DMM/{out_stem}.mixture_weight.tsv'
+    data = pd.read_csv(basedir/'DMM_repeat/name'/f'{out_stem}.mixture_weight.tsv', sep = '\t', index_col = 0)
 
 
     mixture_weight_only = data.loc[:, data.columns.str.startswith('X')]
@@ -347,11 +345,6 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.cluster_summary.pdf')
 
-    # low entropy is bad: should not filter because it still contains some individual binding sites
-    # too_low_entropy = ent[ent<0.1].index.tolist()
-    # annotation_summary['filtered']=annotation_summary.index.isin(too_low_entropy)
-    # anno.loc[anno.index.isin(too_low_entropy)] = False
-
     annotation_summary.to_csv(basedir / f'{out_stem}.cluster_summary.csv')
     anno.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.cluster_annotation_binary.csv')
 
@@ -390,6 +383,7 @@ if __name__ == '__main__':
     # annotate
     data['repFamily']=data.index.str.replace('_AS', '').map(name2family).tolist()
     data['repClass']=data.index.str.replace('_AS', '').map(name2class).tolist()
+    
     # visualize regions distribution for each cluster
     col = 'repClass'
     cluster_count = data.pivot_table(index = 'cluster', columns = col, 
@@ -445,6 +439,7 @@ if __name__ == '__main__':
                                         data = data, anno = anno, comp_mapping = comp_mapping)
 
     data_bf_dmm = data.merge(anno, left_on = 'BF_assignment', right_index = True, how = 'left')
+    
     # rescue individual binding sites that were that detected by any hypothesis
     data_bf_dmm.loc[individual_bfs_dmm.index, anno.columns]=individual_bfs_dmm.ge(logLR_threshold)
 
@@ -509,6 +504,7 @@ if __name__ == '__main__':
     # ====== Generate Output ======
     # --- output by individual RBP ---
     columns = ['repFamily','repClass', 'logLR', 'cluster','BF_assignment']
+    
     # output per RBP enrich windows
     data_bf_dmm_masked['name'] = data_bf_dmm_masked.index
     for c in anno.columns:

@@ -36,7 +36,7 @@ rule fit_beta_mixture_model_CC:
     benchmark: "benchmarks/DMM/fit_beta.{libname}.{clip_sample_label}"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}/fit_DMM.R \
+        Rscript --vanilla {SCRIPT_PATH}/fit_BBM.R \
             {input.table} \
             {input.feature_annotations} \
             {wildcards.libname}.{wildcards.clip_sample_label} \
@@ -99,7 +99,7 @@ rule fit_beta_mixture_model_another_lib:
     benchmark: "benchmarks/DMM/fit_model.{libname}.{clip_sample_label}.{bg_sample_label}"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}/fit_DMM.R \
+        Rscript --vanilla {SCRIPT_PATH}/fit_BBM.R \
             {input.table} \
             {input.feature_annotations} \
             {wildcards.libname}.{wildcards.clip_sample_label} \
@@ -139,25 +139,6 @@ rule analyze_beta_mixture_results_another_lib:
             {input.table} \
             {input.feature_annotations}
         """
-
-
-# rule find_reproducible_enriched_windows:
-#     input: # "internal_output/enriched_windows/{libname}.{clip_sample_label}.enriched_windows.tsv.gz",
-#         windows = lambda wildcards: expand(
-#             "internal_output/enriched_windows/{libname}.{{clip_sample_label}}.enriched_windows.tsv.gz", 
-#             libname = manifest.loc[manifest['experiment']==wildcards.experiment, 'libname'].tolist()) # find all library of the same experiment
-#     output:
-#         reproducible_windows = "output/reproducible_enriched_windows/{experiment}.{clip_sample_label}.reproducible_enriched_windows.tsv.gz",
-#         linear_bar = "output/figures/reproducible_enriched_windows/{experiment}.{clip_sample_label}.reproducible_enriched_window_counts.linear.pdf",
-#         log_bar = "output/figures/reproducible_enriched_windows/{experiment}.{clip_sample_label}.reproducible_enriched_window_counts.log10.pdf"
-#     params:
-#         error_file = "stderr/{experiment}.{clip_sample_label}.find_reproducible_enriched_windows.err",
-#         out_file = "stdout/{experiment}.{clip_sample_label}.find_reproducible_enriched_windows.out",
-#         run_time = "5:00",
-#         memory = "2000",
-#     benchmark: "benchmarks/find_reproducible_enriched_windows/{experiment}.{clip_sample_label}.all_replicates.reproducible.txt"
-#     shell:
-#         "Rscript --vanilla {SCRIPT_PATH}/identify_reproducible_windows.R internal_output/enriched_windows/ {wildcards.clip_sample_label} " + (BLACKLIST if BLACKLIST is not None else "") 
 
 rule make_window_by_barcode_table:
     input:
@@ -294,7 +275,7 @@ rule fit_beta_gc_aware:
         "envs/DMM.yaml"
     shell:
         """
-        Rscript --vanilla {SCRIPT_PATH}/fit_DMM_gcaware.R \
+        Rscript --vanilla {SCRIPT_PATH}/fit_BBM_gcaware.R \
             {input.table} \
             {input.feature_annotations} \
             {input.gc} \

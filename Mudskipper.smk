@@ -80,9 +80,9 @@ module QC:
     config:
         config
 
-module DMM:
+module DMM_BBM:
     snakefile:
-        "rules/normalization_DMM.smk"
+        "rules/DMM_BBM.smk"
     config:
         config
 
@@ -104,9 +104,9 @@ module repeat_DMM:
     config:
         config
 
-module make_track:
+module bedgraphs_n_bws:
     snakefile:
-        "rules/make_track.smk"
+        "rules/bedgraphs_n_bws.smk"
     config:
         config
 
@@ -116,15 +116,15 @@ module merge_bw:
     config:
         config
 
-module analysis:
+module run_homer:
     snakefile:
-        "rules/analysis.smk"
+        "rules/run_homer.smk"
     config:
         config
 
-module normalization:
+module get_counts:
     snakefile:
-        "rules/skipper.smk"
+        "rules/get_counts.smk"
     config:
         config
 
@@ -172,39 +172,39 @@ elif READ_TYPE == "single":
             fq1=expand("{libname}/fastqs/ultraplex_demux_{sample_label}.fastq.gz", 
             libname = libnames, sample_label = rbps)
 
-############## Normalization and finemapping #################
-use rule * from normalization as normalization_*
+############## counting and finemapping #################
+use rule * from get_counts as get_counts_*
 use rule * from finemap as fine_*
 use rule * from repeat as re_*
 
-############## DMM #################
-use rule * from DMM as dmm_*
+############## DMM and the beta binomial mixture model (BBM) #################
+use rule * from DMM_BBM as dmm_bbm_*
 use rule * from repeat_DMM as redmm_*
 
-############## BIGWIGS #################
+############## BEDGRAPHS & BIGWIGS #################
 if READ_TYPE == "paired":
-    use rule extract_read_two from make_track as extract_r1 with: # oligoPE truncation is in read1
+    use rule extract_read_two from bedgraphs_n_bws as extract_r1 with: # oligoPE truncation is in read1
         input:
             bam="{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.bam"
         output:
             read2="{libname}/bw/{sample_label}.r2.bam",
             read1="{libname}/bw/{sample_label}.r1.bam"
     
-    use rule CITS_bam_to_bedgraph from make_track as CITS_bedgraph_r1 with:
+    use rule CITS_bam_to_bedgraph from bedgraphs_n_bws as CITS_bedgraph_r1 with:
         input:
             bam="{libname}/bw/{sample_label}.r1.bam"
         output:
             pos="{libname}/bw/CITS/{sample_label}.pos.bedgraph",
             neg="{libname}/bw/CITS/{sample_label}.neg.bedgraph"
     
-    use rule COV_bam_to_bedgraph from make_track as COV_bedgraph_r1 with:
+    use rule COV_bam_to_bedgraph from bedgraphs_n_bws as COV_bedgraph_r1 with:
         input:
             bam="{libname}/bw/{sample_label}.r1.bam"
         output:
             pos="{libname}/bw/COV/{sample_label}.pos.bedgraph",
             neg="{libname}/bw/COV/{sample_label}.neg.bedgraph"
     
-    use rule CITS_bam_to_bedgraph from make_track as CITS_bedgraph_external with:
+    use rule CITS_bam_to_bedgraph from bedgraphs_n_bws as CITS_bedgraph_external with:
         input:
             bam=lambda wildcards: ancient(config['external_bam'][wildcards.external_label]['file'])
         output:
@@ -216,11 +216,11 @@ if READ_TYPE == "paired":
             out_file = "stdout/CITS_bedgraph.{external_label}",
             cores = 1,
             memory = 40000,
-    use rule COV_bam_to_bedgraph from make_track as COV_bedgraph_external with:
+    use rule COV_bam_to_bedgraph from bedgraphs_n_bws as COV_bedgraph_external with:
         input:
             bam=lambda wildcards: ancient(config['external_bam'][wildcards.external_label]['file'])
         output:
-            pos="external_bw/COVuse rule * from make_track/{external_label}.pos.bedgraph",
+            pos="external_bw/COVuse rule * from bedgraphs_n_bws/{external_label}.pos.bedgraph",
             neg="external_bw/COV/{external_label}.neg.bedgraph"
         params:
             run_time="1:00:00",
@@ -229,25 +229,25 @@ if READ_TYPE == "paired":
             cores = 1,
             memory = 40000,
 
-    use rule * from make_track
+    use rule * from bedgraphs_n_bws
 
 elif READ_TYPE == "single":
 
-    use rule CITS_bam_to_bedgraph from make_track as CITS_bedgraph with:
+    use rule CITS_bam_to_bedgraph from bedgraphs_n_bws as CITS_bedgraph with:
         input:
             bam="{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.bam"
         output:
             pos=temp("{libname}/bw/CITS/{sample_label}.pos.bedgraph"),
             neg=temp("{libname}/bw/CITS/{sample_label}.neg.bedgraph")
     
-    use rule COV_bam_to_bedgraph from make_track as COV_bedgraph with:
+    use rule COV_bam_to_bedgraph from bedgraphs_n_bws as COV_bedgraph with:
         input:
             bam="{libname}/bams/{sample_label}.rmDup.Aligned.sortedByCoord.out.bam"
         output:
             pos=temp("{libname}/bw/COV/{sample_label}.pos.bedgraph"),
             neg=temp("{libname}/bw/COV/{sample_label}.neg.bedgraph")
     
-    use rule CITS_bam_to_bedgraph from make_track as CITS_bedgraph_external with:
+    use rule CITS_bam_to_bedgraph from bedgraphs_n_bws as CITS_bedgraph_external with:
         input:
             bam=lambda wildcards: ancient(config['external_bam'][wildcards.external_label]['file'])
         output:
@@ -260,7 +260,7 @@ elif READ_TYPE == "single":
             cores = 1,
             memory = 32000,
     
-    use rule COV_bam_to_bedgraph from make_track as COV_bedgraph_external with:
+    use rule COV_bam_to_bedgraph from bedgraphs_n_bws as COV_bedgraph_external with:
         input:
             bam=lambda wildcards: ancient(config['external_bam'][wildcards.external_label]['file'])
         output:
@@ -273,10 +273,10 @@ elif READ_TYPE == "single":
             cores = 1,
             memory = 32000,
 
-    use rule bedgraph_to_bw from make_track
+    use rule bedgraph_to_bw from bedgraphs_n_bws
 
 ########## MERGE BW ############
 use rule * from merge_bw
 
 ########## HOMER ############
-use rule * from analysis
+use rule * from run_homer

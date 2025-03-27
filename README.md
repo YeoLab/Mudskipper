@@ -87,7 +87,7 @@ By default, if the options below are left blank, the pipeline runs the Dirichlet
 
 Unfortunately, DMM is not compatible with singleplex datasets. Calling binding sites in singleplex datasets requires an 'external control' (see details below). Without an external control, the process will stop at the read counting stage. The best external control according to Mudskipper benchmark is an eCLIP SMInput.
 
-The backgrounds can be applied to other peak callers such as Skipper, CLIPper, and the Beta-Binomial Mixture model.
+The backgrounds can be applied to other peak callers such as Skipper, CLIPper, and the Beta-Binomial Mixture (BBM) model.
 
 If you want to include a background library, here's how to do it:
 
@@ -159,9 +159,9 @@ These are in the `EXPERIMENT_NAME` folders. For example, in your manifest.csv, t
 ## Peaks, Binding Sites
 This pipeline tries to integrate multiple peak callers/binding site finders and orchestrate secondary analysis (peaks per region, motifs etc).
 
-### Mudskipper: Mixture Modelling in `beta-mixture_*` and `DMM`.
+### Mudskipper: Mixture Modelling in `beta-binomial-mixture_* (BBM)` and `DMM`.
 - `DMM`(Dirichlet Multinomial Mixture) considers the distribution of reads among all RBPs without summing the rest into CC. This model detects shared binding site better than beta-mixture model, but is slower. 
-- `beta-mixture*` Considers enrichment of RBP reads against complementary control (CC) or an internal library(IgG)! Compared to the DMM model, it struggles to identify shared binding sites, but it runs faster.
+- `beta-binomial-mixture (BBM)*` Considers enrichment of RBP reads against complementary control (CC) or an internal library(IgG)! Compared to the DMM model, it struggles to identify shared binding sites, but it runs faster.
 - The folder output/folder structure is the same for both methods: 
     - For most researchers, `*enriched_windows.tsv` will be the core output of interest. This table contains the presumed binding sites.
         - column `logLR` measures confidence. This number represents the log likelihood ratio(LR) of a window being a binding site versus not, aka, how likely is it to observe the data if it is bound, versus it being not bound. A logLR of 2 means you are about 10x more likely to observe a result like this  from binding rather than from random chance. In short, a Higher logLR means higher confidence in the binding site

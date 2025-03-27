@@ -103,30 +103,6 @@ rule count_repeat_tables:
         "paste <(zcat {input.unique_repeats} | awk -v OFS=\"\\t\" 'BEGIN {{print \"repeat_family\";}} {{print $9}}') {input.replicate_counts} | "
             "awk -v OFS=\"\\t\" 'NR > 1 {{for(i = 2; i <= NF; i++) {{tabulation[$1][i] += $i}} }} END {{for(name in tabulation) {{ printf name; for(i = 2; i <= NF; i++) {{printf \"\\t\" tabulation[name][i]}} print \"\";}} }}' | sort -k 1,1 | gzip >> {output.family_table};"
 
-rule fit_clip_betabinomial_re_model:
-    input:
-        table = lambda wildcards: "counts/repeats/tables/name/"+libname_to_experiment(wildcards.libname)+".{sample_label}.tsv.gz",
-    output:
-        coef = "skipper_CC/clip_model_coef_re/{libname}.{sample_label}.tsv",
-        # plot = lambda wildcards: expand("output/figures/clip_distributions/{{experiment_label}}.{{clip_replicate_label}}.{other_label}.clip_distribution.pdf", other_label = experiment_to_input_replicate_labels[wildcards.experiment_label][wildcards.Input_replicate_label])
-    params:
-        error_out_file = "error_files/fit_clip_betabinomial_re_model.{libname}.{sample_label}.err",
-        out_file = "stdout/fit_clip_betabinomial_re_model.{libname}.{sample_label}.out",
-        run_time = "10:00",
-        memory = 40000,
-        cores = 1,
-    benchmark: "benchmarks/fit_clip_betabinomial_re_model/{libname}.{sample_label}.fit_clip.txt"
-    container:
-        "docker://howardxu520/skipper:R_4.1.3_1"
-    shell:
-        """
-        Rscript --vanilla {SCRIPT_PATH}/fit_clip_betabinom_re.R \
-            {input.table} \
-            {wildcards.libname} \
-            {wildcards.libname}.{wildcards.sample_label} \
-            {output.coef}
-        """
-
 rule sum_all_other_background_re:
     input:
         lambda wildcards: expand("counts/repeats/vectors/{libname}.{sample_label}.counts",
@@ -168,46 +144,3 @@ rule combine_ip_to_internal_background: # bg_sample_label = 'internal'
         paste <(zcat {input.count_table}) {input.bg_counts}| gzip -c > {output.combined_count_table}
         """
 
-rule call_enriched_re:
-    input:
-        table = lambda wildcards: f"counts_CC/repeats/bgtables/internal/"+libname_to_experiment(wildcards.libname)+f".{wildcards.sample_label}.tsv.gz",
-        repeats = config['REPEAT_TABLE'].replace(".tsv", ".sort.unique.bed"),
-        parameters = "skipper_CC/clip_model_coef_re/{libname}.{sample_label}.tsv",
-    output:
-        "skipper_CC/figures/clip_scatter_re/{libname}.{sample_label}.clip_test_distribution.pdf",
-        "skipper_CC/enriched_re/{libname}.{sample_label}.enriched_re.tsv.gz"
-    params:
-        input_replicate_label = lambda wildcards: wildcards.libname+'.internal',
-        error_out_file = "error_files/{libname}.{sample_label}.call_enriched_re.err",
-        out_file = "stdout/{libname}.{sample_label}.call_enriched_re.out",
-        run_time = "00:25:00",
-        memory = 3000,
-        cores = 1,
-    benchmark: "benchmarks/call_enriched_re/{libname}.{sample_label}.call_enriched_re.txt"
-    container:
-        "docker://howardxu520/skipper:R_4.1.3_1"
-    shell:
-        """
-        Rscript --vanilla {SCRIPT_PATH}/call_enriched_re.R \
-            {input.table} \
-            {input.repeats} \
-            {input.parameters} \
-            {params.input_replicate_label} \
-            {wildcards.libname}.{wildcards.sample_label} \
-            {wildcards.libname}.{wildcards.sample_label} \
-            skipper_CC
-        """
-
-# rule find_reproducible_enriched_re:
-#     input:
-#         windows = lambda wildcards: expand("output/enriched_re/{{experiment_label}}.{clip_replicate_label}.enriched_re.tsv.gz", clip_replicate_label = experiment_to_clip_replicate_labels[wildcards.experiment_label])
-#     output:
-#         reproducible_windows = "output/reproducible_enriched_re/{experiment_label}.reproducible_enriched_re.tsv.gz",
-#     params:
-#         error_file = "stderr/{experiment_label}.find_reproducible_enriched_re.err",
-#         out_file = "stdout/{experiment_label}.find_reproducible_enriched_re.out",
-#         run_time = "5:00",
-#         memory = "1000",
-#     benchmark: "benchmarks/find_reproducible_enriched_re/{experiment_label}.all_replicates.reproducible.txt"
-#     shell:
-#         "Rscript --vanilla {TOOL_DIR}/identify_reproducible_re.R output/enriched_re/ {wildcards.experiment_label}"

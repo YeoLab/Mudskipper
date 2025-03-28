@@ -2,6 +2,7 @@ library(DirichletMultinomial)
 library(lattice)
 library(xtable)
 library(tidyverse)
+library(parallel)
 
 args = commandArgs(trailingOnly=TRUE)
 
@@ -33,11 +34,7 @@ fr_over_total = 6
 count_df = read_tsv(fl)
 print(head(count_df))
 
-
 count_df = count_df[rowSums(count_df[sample_cols])>min_read, ]
-# select by average fraction of reads instead of total reads. This might benefit lowly sequenced RBP
-# average_fraction <- rowSums(t(t(count_df[sample_cols])/colSums(count_df[sample_cols])))/length(sample_cols)
-# count_df = count_df[average_fraction>fr_over_total/nrow(count_df), ]
 
 count <- as.matrix(count_df[sample_cols]) # don't need to t because we have different orientation
 print('count matrix nrows=')
@@ -47,7 +44,6 @@ print('count matrix ncol=')
 print(ncol(count))
 
 # fit data k=1 to max_component, using a subset of data
-library(parallel)
 cores = min(detectCores(), length(comp_attempt))
 if (full) {
 fit <- mclapply(comp_attempt, dmn, count=count, verbose=TRUE, mc.cores = cores)

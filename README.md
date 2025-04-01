@@ -1,6 +1,5 @@
 # Mudskipper: Multiplex CLIP processing pipeline from fastq.gz to binding sites and motifs
-- [Link to original ABC paper](https://www.nature.com/articles/s41592-022-01708-8): use `snakeABC_SE.smk`
-- Yeolab paired-end protocol: use `snakeOligoCLIP_PE.smk`
+- [Link to original ABC paper](https://www.nature.com/articles/s41592-022-01708-8)
 
 # Installation
 - Main environment: Snakemake 7.3.8 and scipy:  
@@ -25,44 +24,30 @@
     - for each option, [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
 4. Run snakemake
     ```
-    snakemake -s snakeABC_SE.smk \
+    snakemake -s Mudskipper.smk \
         --configfile config/preprocess_config/oligose_k562_noalt.yaml \
         --profile profiles/tscc2
     ```
-    - `-s`: if using YeoLab internal pair-end protocol, use `snakeOligoCLIP_PE.smk`. if you did ABC-CLIP data, use `snakeABC_SE.smk`.
-    - `--configfile`: yaml file to specify your inputs, including where are the fastqs, what are the barcode, what reference genome...etc.
+    - `--configfile`: yaml file to specify your inputs, including where are the fastqs, what are the barcode, what reference genome, is the run paired or single end,...etc.
     - Add `-n` to the command in order to complete a dry run (sets up snakemake architecture without actually running). 
     - the rest of the options are in `--profile`. Adjust as needed. [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
 
 Refer to the following sections to learn what to include in your configuration.
 
-## Example config files for different use cases.
-- Multiplex Example: 
-    - Yeo lab internal pair-end protocol: `config/preprocess_config/oligope_iter5.yaml` 
-    - ABC single-end protocol: `config/preprocess_config/ABC_2rep.yaml` 
-- Singleplex Example: 
-    - ABC single-end protocol: `config/preprocess_config/oligose_single_rbfox2_hek.yaml`
-    - Yeo lab internal paired-end protocol: `config/preprocess_config/oligope_v5_nanos2.yaml`
-    - Process 1 type of singleplex per 1 manifest.
+# Configuration file:
 
-# Options for Input files
+## Options for Input files
 
-## `MANIFEST`: a CSV file specifying FASTQ file locations and replicate information
-All FASTQ files in the same manifest should have the same combinations of barcodes. For example, if you performed two singleplex experiments—one with barcode 1 and the other with barcode 2—they should be specified in two separate config files.
-- Example manifest files: 
-    - Multiplex Example:
-        - Yeo lab paired-end: `config/fastq_csv/katie_pe_iteration5.csv`
-        - ABC: `config/fastq_csv/ABC_2rep.csv`
-    - Singleplex Example:
-        - Yeo labe paired-end: `config/fastq_csv/V5_NANOS2.csv`
-        - ABC: `/config/fastq_csv/ABC_SLBP_singleplex.csv`
+### `MANIFEST`: a CSV file specifying FASTQ file locations and replicate information
+All FASTQ files in the same manifest should have the same combinations of barcodes.
+- Example: `config/ABC_2rep.csv`
 - columns:
     - `fastq1`&`fastq2`: *.fastq.gz file for read1 and read 2
     - `libname`: unique names for each library. Should not contain space, special characters such as #,%,*
     - `experiment`: unique names for experiment. **Rows with the same `experiment` will be treated as replicates.** Should not contain space, special characters such as #,%,*
 
-## `barcode_csv`: specifies the barcode sequencing information for each Antibody/RBP.
-- Example: `config/barcode_csv/iter5.csv`
+### `barcode_csv`: specifies the barcode sequencing information for each Antibody/RBP.
+- Example: `config/ABC_barcode.csv`
 - Notebook to generate this file (Yeolab internal user): `utils/generate barcode-iter5.ipynb`
 - delimiter: `:`
 - columns:
@@ -71,18 +56,11 @@ All FASTQ files in the same manifest should have the same combinations of barcod
         - ABC: read starts with this sequence.
     - 2nd column: Antibody/RBP name, Should not contain space, special characters such as #,%,*.
 
-# Options to Control Output
+## Options to Control Output
 - `WORKDIR`: output directory
 - `RBP_TO_RUN_MOTIF`: list of RBP names to run motif analysis. Must be one of the rows in `barcode_csv`.
 
-Although the Mudskipper paper describes the Dirichlet Multinomial Mixture (DMM) algorithm, this pipeline supports all other peak callers and background models benchmarked in the paper. Below are options for running them. For everyday use, it is recommended to set all of these options to False unless you are specifically trying to regenerate all results.
-- `run_clipper`: True if you want CLIPper outputs (works, but slow)
-- `run_skipper`: True if you want to run Skipper. (usually doesn't work in ABC)
-- `run_comparison`: True if you want to run other peak caller such as Piranha and OmniCLIP
-    - `DB_FILE` and `GENOME_dir`: are the omniclip files. check out their [github](https://github.com/philippdre/omniCLIP) on how to run them
-- `debug`: True if you want to debug. This tries to blast the unmapped reads.
-
-# Options to Choose Backgrounds
+## Options to Choose Backgrounds
 By default, if the options below are left blank, the pipeline runs the Dirichlet Multinomial Mixture (DMM) algorithm for multiplex datasets, where RBPs are explicitly compared against each other. DMM is the most effective model for multiplex datasets. There is an option to compare to 'internal control' such as a spike-in or IgG etc with a barcode as background.
 
 Unfortunately, DMM is not compatible with singleplex datasets. Calling binding sites in singleplex datasets requires an 'external control' (see details below). Without an external control, the process will stop at the read counting stage. The best external control according to Mudskipper benchmark is an eCLIP SMInput.
@@ -91,10 +69,10 @@ The backgrounds can be applied to other peak callers such as Skipper, CLIPper, a
 
 If you want to include a background library, here's how to do it:
 
-## "Internal control: A barcode that measures background signal, present in the same FASTQ file.
+### "Internal control: A barcode that measures background signal, present in the same FASTQ file.
 - `AS_INPUT`: If you have an IgG antibody/spike-in/bead-only control in the multiplex experiment that will serve as the normalization reference, enter its name here. It must be one of the rows in the barcode_csv file. 
 
-## "External control": a library that is NOT in the same fastq as your oligoCLIP/ABC to serve as the background.
+### "External control": a library that is NOT in the same fastq as your oligoCLIP/ABC to serve as the background.
 - specify them in `external_bam` with name of the library (first line, ex `eCLIP_SLBP_SMInput`), followed by  `file:` and `INFORMATIVE_READ`
     ```
     # For example:
@@ -106,20 +84,48 @@ If you want to include a background library, here's how to do it:
 - How to generate them? the bams must be processed with the exact same STAR index as `STAR_DIR`, and is recommended to be processed with the same/similar mapping parameters as this repo or skipper.
 
 
-# Preprocessing Options:
+## Preprocessing Options:
 - `adaptor_fwd`,`adaptor_rev`: adapter sequence to trim. Do not include barcode
 - `tile_length`: we tile adapter sequences of this length so that indels do not interfere with trimming
 - `QUALITY_CUTOFF`: default 15. cutadapt params.
 - `umi_length`: Length of unique molecular identifier (UMI).
-- `STAR_DIR`: directory of the STAR index.
+- `STAR_DIR`: Directory of the STAR index.
 
-# Annotation Options:
+## Annotation Options:
 - skipper annotations: [follow skipper instructions](https://github.com/YeoLab/skipper#prerequisites) or generate with [skipper_utils](https://github.com/algaebrown/skipper_utils)
     - Yeolab internal users: Annotations can be found in `/tscc/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/`.
 - `CHROM_SIZES`
 - `GENOMEFA`
 
 # Output files
+
+## Mudskipper: Mixture Modelling in `beta-binomial-mixture_* (BBM)` and `DMM`.
+- `DMM/`(Dirichlet Multinomial Mixture) considers the distribution of reads among all RBPs without summing the rest into CC. This model detects shared binding site better than beta-mixture model, but is slower. 
+- `beta-binomial-mixture/*` Considers enrichment of RBP reads against complementary control (CC) or an internal library(IgG). Compared to the DMM model, it struggles to identify shared binding sites, but it is much faster.
+- The folder output/folder structure is the same for both methods: 
+    - For most researchers, the `*enriched_windows.tsv` files will be the core output of interest, as these tables contains the presumed binding sites. As such, they are saved directly into the output folders. 
+        - column `logLR` measures confidence. This number represents the log likelihood ratio(LR) of a window being a binding site versus not, aka, how likely is it to observe the data if it is bound, versus it being not bound. A logLR of 2 means you are about 10x more likely to observe a result like this  from binding rather than from random chance. In short, a Higher logLR means higher confidence in the binding site
+        - `p_bar`,`p_raw`, `fc_raw`, `fc_bar`: Effect sizes
+            - `*_bar` is the estimate from the model.
+            - `*_raw` is directly calculated from counts:
+            - p= (read in RBP)/(read in window)
+            - fc = ((read in RBP)/(read in window))/((all reads in RBP)/total reads)
+    - Secondary analysis: 
+        - `homer/` folder contains motifs generated via [HOMER](http://homer.ucsd.edu/homer/motif/)
+        - `finemapping` contains finemapped binding sites. It isn't great for splice site binding proteins.
+        - `*summary.csv`: What gene types/transcript types/region types are bound.
+    - `intermediates/`
+        - `fit.rda` contains everything including models of various numbers of components(K).
+        - `*alpha.tsv` contains the parameter alpha/beta for beta-binomial distribution for each component.
+        - `*null_alpha.tsv` contains the parameter alpha/beta for a single component beta-binomial distribution.
+        - `*goodness_of_fit.pdf`: AIC, BIC, log likelihood for model selection.
+        - `*label_component.csv`: The labels (bound vs not bound) for each component.
+        - `*mixture_weight.tsv`: Contains $E[z_ik]$ values which measure how likely each window belongs to a specific cluster.
+        - `*weights`: The "mixture weight".
+    - `plots/`
+        - `feature_logistic.pdf` and `feature_ridge.pdf` contains how likely each types of regions is bound.
+        - `*goodness_of_fit.pdf`: AIC, BIC, log likelihood for model selection.
+
 ## Trimmed fastqs, bams, bigwigs:
 These are in the `EXPERIMENT_NAME` folders. For example, in your manifest.csv, there are two experiments, "GN_1019" and "GN_1020", then, under the `GN_1019/` folder you would see the following:
 1. `fastqs`: The trimmed and the demultiplexed fastqs.
@@ -156,64 +162,15 @@ These are in the `EXPERIMENT_NAME` folders. For example, in your manifest.csv, t
     - `*region.csv`: This contains how many read per region for each RBP.
     - All of the above can help you see if there is the right enrichment and specificity for your multiplex CLIP.
 
-## Peaks, Binding Sites
-This pipeline tries to integrate multiple peak callers/binding site finders and orchestrate secondary analysis (peaks per region, motifs etc).
-
-### Mudskipper: Mixture Modelling in `beta-binomial-mixture_* (BBM)` and `DMM`.
-- `DMM`(Dirichlet Multinomial Mixture) considers the distribution of reads among all RBPs without summing the rest into CC. This model detects shared binding site better than beta-mixture model, but is slower. 
-- `beta-binomial-mixture (BBM)*` Considers enrichment of RBP reads against complementary control (CC) or an internal library(IgG)! Compared to the DMM model, it struggles to identify shared binding sites, but it runs faster.
-- The folder output/folder structure is the same for both methods: 
-    - For most researchers, `*enriched_windows.tsv` will be the core output of interest. This table contains the presumed binding sites.
-        - column `logLR` measures confidence. This number represents the log likelihood ratio(LR) of a window being a binding site versus not, aka, how likely is it to observe the data if it is bound, versus it being not bound. A logLR of 2 means you are about 10x more likely to observe a result like this  from binding rather than from random chance. In short, a Higher logLR means higher confidence in the binding site
-        - `p_bar`,`p_raw`, `fc_raw`, `fc_bar`: Effect sizes
-            - `*_bar` is the estimate from the model.
-            - `*_raw` is directly calculated from counts:
-            - p= (read in RBP)/(read in window)
-            - fc = ((read in RBP)/(read in window))/((all reads in RBP)/total reads)
-    - Secondary analysis: 
-        - `feature_logistic.pdf` and `feature_ridge.pdf` contains how likely each types of regions is bound.
-        - `*summary.csv`: What gene types/transcript types/region types are bound.
-        - `homer/` folder contains motifs generated via [HOMER](http://homer.ucsd.edu/homer/motif/)
-        - `finemapping` contains finemapped binding sites. It isn't great for splice site binding proteins.
-    - Modelling outputs:
-        - `fit.rda` contains everything including models of various numbers of components(K).
-        - `*alpha.tsv` contains the parameter alpha/beta for beta-binomial distribution for each component.
-        - `*null_alpha.tsv` contains the parameter alpha/beta for a single component beta-binomial distribution.
-        - `*goodness_of_fit.pdf`: AIC, BIC, log likelihood for model selection.
-        - `*label_component.csv`: The labels (bound vs not bound) for each component.
-        - `*mixture_weight.tsv`: This is namely badly. What is contains is $E[z_ik]$ which is "how likely each window belong to a cluster".
-        - `*weights`: The "mixture weight".
-
-### Skipper: in `skipper*`
-- `skipper_CC` models RBP versus complementary control.
-- `skipper_{INTERNAL_CONTROL_NAME}` models RBP versus an internal control library, e.g. IgG.
-- `skipper_external/{EXTERNAL_CONTROL_NAME}` models RBP versus an external control library, e.g. RNA-seq or SMInput.
-- For skipper outputs, see [skipper's documentation](https://github.com/YeoLab/skipper)!
-
-### CLIPper: in `CLIPper*`
-- `CLIPper` only uses the IP to find local read enrichment.
-- `CLIPper_CC` contains local read enrichment, "normalized to" complementary control using chi-square or fisher exact test. This is what we publised in the original paper.
-- `CLIPper-{EXTERNAL_CONTROL_NAME}`: contains peaks "normalized to" an external control library. (SMInput or total RNA-seq)
-- `CLIPper.{INTERNAL_CONTROL_NAME}`: contains peaks "normalized to" an internal control library. (IgG)
-- `*normed.compressed.annotate.bed` is the final output. See the ENCODE pipeline for columns specification
-
-### Comparison: `comparison/` Only if you want to run Piranha, OmniCLIP and PureCLIP.
-- See their respective documentation for detail.
-
-
 # For developers:
 The majority of the code for the pipeline is in `rules/`:
 - `se_preprocess` and `pe_preprocess` takes fastq --> trim -> demultiplex -> deduplicate -> bams
 - `QC` contains rules to assemble quality control statistics, and some additional debugging rules such as investigating unmapped reads and those without barcode.
-- rules for bigwig generation is in `make_track.smk`
+- rules for bigwig generation is in `bedgraphs_n_bws.smk`
 - `merge_bw.smk` sums up bigwigs to make complementary control.
-- `normalization_DMN`, `repeat_DMN` contains Mudskipper code, which does mixture model/generative clustering in genomic windows and repeat windows.
-- `skipper.smk`, `repeat.smk` is entirely stolen from skipper
-- `clipper.smk` runs CLIPper and the chi-square things. Stolen from ENCODE pipeline.
-- `analysis.smk` and `finemap.smk`: runs finemapping, motif detection from Skipper and MudSkipper
-
-Some rules to help you debug
-- `map_r1.smk` and `multimap.smk`
+- `DMM_BBM`, `get_counts`, `repeat_DMN` contains Mudskipper code, which does mixture model/generative clustering in genomic windows and repeat windows.
+- `repeat.smk` Ggther's information on repetive elements. 
+- `finemap.smk` and `run_homer.smk`: runs finemapping and motif detection.
 
 
 

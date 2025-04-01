@@ -33,18 +33,18 @@ rule fit_DMM:
     input:
         table = "counts/repeats/megatables/{repeat_type}/{libname}.tsv.gz",
     output:
-        "DMM_repeat/{repeat_type}/{libname}.goodness_of_fit.pdf",
-        "DMM_repeat/{repeat_type}/{libname}.alpha.tsv",
-        "DMM_repeat/{repeat_type}/{libname}.null.alpha.tsv",
-        "DMM_repeat/{repeat_type}/{libname}.mixture_weight.tsv",
-        "DMM_repeat/{repeat_type}/{libname}.weights.tsv"
+        "DMM_repeat/{repeat_type}/plots/{libname}.goodness_of_fit.pdf",
+        "DMM_repeat/{repeat_type}/intermediates/{libname}.alpha.tsv",
+        "DMM_repeat/{repeat_type}/intermediates/{libname}.null.alpha.tsv",
+        "DMM_repeat/{repeat_type}/intermediates/{libname}.mixture_weight.tsv",
+        "DMM_repeat/{repeat_type}/intermediates/{libname}.weights.tsv"
     params:
         error_out_file = "error_files/fit_DMM_repeat.{libname}.{repeat_type}.err",
         out_file = "stdout/fit_DMM_repeat.{libname}.{repeat_type}.out",
         run_time = "12:00:00",
-        memory = 10000,
-        cores = "4",
-        root_folder = lambda wildcards, output: Path(output[0]).parent
+        memory = 16000,
+        cores = "6",
+        root_folder = lambda wildcards, output: Path(output[0]).parent.parent
     benchmark: "benchmarks/DMM/fit.{libname}.{repeat_type}"
     conda:
         "envs/DMM.yaml"
@@ -58,11 +58,11 @@ rule fit_DMM:
 
 rule analyze_DMM:
     input:
-        "DMM_repeat/{repeat_type}/{libname}.goodness_of_fit.pdf",
-        "DMM_repeat/{repeat_type}/{libname}.alpha.tsv",
-        "DMM_repeat/{repeat_type}/{libname}.null.alpha.tsv",
-        "DMM_repeat/{repeat_type}/{libname}.mixture_weight.tsv",
-        "DMM_repeat/{repeat_type}/{libname}.weights.tsv",
+        "DMM_repeat/{repeat_type}/plots/{libname}.goodness_of_fit.pdf",
+        "DMM_repeat/{repeat_type}/intermediates/{libname}.alpha.tsv",
+        "DMM_repeat/{repeat_type}/intermediates/{libname}.null.alpha.tsv",
+        "DMM_repeat/{repeat_type}/intermediates/{libname}.mixture_weight.tsv",
+        "DMM_repeat/{repeat_type}/intermediates/{libname}.weights.tsv",
         annotation = config['REPEAT_TABLE'],
         raw_counts = "counts/repeats/megatables/{repeat_type}/{libname}.tsv.gz",
         repeat_mask = 'mask/{libname}.repeat_mask.csv', #True means zscore > 1
@@ -76,7 +76,7 @@ rule analyze_DMM:
         error_out_file = "error_files/analyze_DMM_repeat.{libname}.{repeat_type}.err",
         out_file = "stdout/fit_DMM_repeat.{libname}.{repeat_type}.out",
         run_time = "1:00:00",
-        memory = 10000,
+        memory = 16000,
         cores = "1",
     benchmark: "benchmarks/DMM/fit.{libname}.{repeat_type}"
     conda:

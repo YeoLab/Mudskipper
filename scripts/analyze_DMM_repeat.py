@@ -263,7 +263,7 @@ if __name__ == '__main__':
     basedir = Path(sys.argv[2])
     annotation_file = sys.argv[3]
 
-    raw_counts_file = basedir / f'counts/repeats/megatables/name/{out_stem}.tsv.gz'
+    raw_counts_file = f'{basedir}/counts/repeats/megatables/name/{out_stem}.tsv.gz'
     annotation = pd.read_csv(annotation_file, sep = '\t', index_col = 0)
     name2family = annotation.set_index('repName')['repFamily'].to_dict()
     name2class = annotation.set_index('repName')['repClass'].to_dict()
@@ -274,17 +274,17 @@ if __name__ == '__main__':
     fc_raw_thres = 1
 
     # fitted parameters and outputs
-    data = pd.read_csv(basedir/'DMM_repeat/name'/f'{out_stem}.mixture_weight.tsv', sep = '\t', index_col = 0)
+    data = pd.read_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.mixture_weight.tsv', sep = '\t', index_col = 0)
 
 
     mixture_weight_only = data.loc[:, data.columns.str.startswith('X')]
     mixture_weight_only.columns
     data['cluster']=mixture_weight_only.idxmax(axis = 1)
 
-    weights = pd.read_csv(basedir/'DMM_repeat/name'/f'{out_stem}.weights.tsv', sep = '\t', index_col = 0)
+    weights = pd.read_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.weights.tsv', sep = '\t', index_col = 0)
     weights.index = [f'X{i}' for i in weights.index]
 
-    model_alphas = pd.read_csv(basedir/'DMM_repeat/name'/f'{out_stem}.alpha.tsv', sep = '\t',
+    model_alphas = pd.read_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.alpha.tsv', sep = '\t',
                         index_col = 0) # RBP by components, B * K
     model_mean = model_alphas.div(model_alphas.sum(axis = 0), axis = 1)
     model_var = model_alphas.apply(lambda column: dirichlet(column).var(), axis = 0)
@@ -293,7 +293,7 @@ if __name__ == '__main__':
     # raw_counts to calculate bayes factor
     raw_counts = pd.read_csv(raw_counts_file, sep = '\t', index_col = 0)
     raw_counts = raw_counts.loc[data.index] # filter for those that has been modelled (passing the total_read_threshold)
-    mask = pd.read_csv(basedir / 'mask'/ f'{out_stem}.repeat_mask.csv', index_col = 0)
+    mask = pd.read_csv(f'{basedir}/mask/{out_stem}.repeat_mask.csv', index_col = 0)
 
     # find total mapped reads as the null
     nread_per_window = raw_counts.sum(axis = 1)
@@ -305,7 +305,7 @@ if __name__ == '__main__':
     sns.clustermap(model_mean.T,
             cbar_kws = {'label': '\bar{p}'},
             metric = 'correlation', cmap = 'Greys', figsize = (4,4))
-    plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.model_mean.pdf')
+    plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.model_mean.pdf')
 
 
     # calculate FC over null for each component
@@ -314,11 +314,11 @@ if __name__ == '__main__':
     sns.clustermap(component_fc,
             cbar_kws = {'label': 'FC over total mapped reads'},
             metric = 'correlation', cmap = 'Greys', figsize = (4,4))
-    plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.component_fc.pdf')
+    plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.component_fc.pdf')
 
     # annotate cluster: elbow method.
     anno = annotate_clusters(model_mean, plot = True, model_std = model_std)
-    plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.elbow_labelling.pdf')
+    plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.elbow_labelling.pdf')
 
     # calculate entropy and filter, summarize clusters
     ent = model_mean.apply(lambda col: entropy(col, mapped_reads_fraction), axis = 0).sort_values()
@@ -343,10 +343,10 @@ if __name__ == '__main__':
     anno.sum(axis = 0).sort_values().plot.barh(ax = ax[2], color = 'grey')
     ax[2].set_ylabel('# clusters assigned')
     plt.tight_layout()
-    plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.cluster_summary.pdf')
+    plt.savefig(f'{basedir}/DMM_repeat/name/{out_stem}.cluster_summary.pdf')
 
-    annotation_summary.to_csv(basedir / f'{out_stem}.cluster_summary.csv')
-    anno.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.cluster_annotation_binary.csv')
+    annotation_summary.to_csv(f'{basedir}/DMM_repeat/name/{out_stem}.cluster_summary.csv')
+    anno.to_csv(f'{basedir}/DMM_repeat/name/{out_stem}.cluster_annotation_binary.csv')
 
     # calculate effect size: p_bar, fc_bar and p_bar's std
     ezik = data[model_mean.columns]
@@ -360,11 +360,11 @@ if __name__ == '__main__':
     var_bar.columns = model_var.index
     std_bar = np.sqrt(var_bar)
 
-    p_bar.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.p_bar.csv')
-    p_raw.to_csv(basedir /'DMM_repeat/name'/  f'{out_stem}.p_raw.csv')
-    fc_bar.to_csv(basedir /'DMM_repeat/name'/  f'{out_stem}.fc_bar.csv')
-    fc_raw.to_csv(basedir /'DMM_repeat/name'/  f'{out_stem}.fc_raw.csv')
-    std_bar.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.p_bar_std.csv')
+    p_bar.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.p_bar.csv')
+    p_raw.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.p_raw.csv')
+    fc_bar.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.fc_bar.csv')
+    fc_raw.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.fc_raw.csv')
+    std_bar.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.p_bar_std.csv')
 
     # plot model fit for p_bar and p_raw
     f, axes = plt.subplots(2, math.ceil(p_bar.shape[1]/2), figsize = (8, 5))
@@ -378,7 +378,7 @@ if __name__ == '__main__':
         ax.set_title(f'{col}\n r={r:.2f}\n p={pval:.2E}')
     sns.despine()
     plt.tight_layout()
-    plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.p_fit.pdf')
+    plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.p_fit.pdf')
 
     # annotate
     data['repFamily']=data.index.str.replace('_AS', '').map(name2family).tolist()
@@ -397,13 +397,13 @@ if __name__ == '__main__':
             cmap = 'Greys', metric = 'cosine', cbar_kws ={'label': '%window', }, cbar_pos = (1,0.2,0.02,0.6),
             figsize = (5,3), xticklabels = 1, yticklabels = 1,
             row_colors = anno_as_color.T.sort_index().T)
-    plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.cluster_repClass.pdf')
-    cluster_count.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.cluster_repClass.csv')
+    plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.cluster_repClass.pdf')
+    cluster_count.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.cluster_repClass.csv')
 
     col = 'repFamily'
     cluster_count = data.pivot_table(index = 'cluster', columns = col, 
                                 fill_value=0, aggfunc='size')
-    cluster_count.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.cluster_{col}.csv')
+    cluster_count.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.cluster_{col}.csv')
 
     # Calculate Bayes Factor (hypothesis wise)
     comp_mapping = {}
@@ -431,8 +431,8 @@ if __name__ == '__main__':
         individual_bfs_dmm.append(individual_LR)
 
     individual_bfs_dmm = pd.concat(individual_bfs_dmm, axis = 1)
-    bfs_dmm.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.BF_hypothesis.csv')
-    individual_bfs_dmm.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.BF_individual.csv') 
+    bfs_dmm.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.BF_hypothesis.csv')
+    individual_bfs_dmm.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.BF_individual.csv') 
 
     # ====== By Hypothesis =====
     data = filter_by_bf(bfs_dmm, individual_bfs_dmm, 
@@ -451,25 +451,25 @@ if __name__ == '__main__':
                  )
     dmm_fcount_family = get_counts_by_rbp(data_bf_dmm_masked, anno, data_col_to_merge = 'BF_assignment',
                                                     to_count = 'repFamily')
-    dmm_fcount_family.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.rbp_family_type.csv')
+    dmm_fcount_family.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.rbp_family_type.csv')
     dmm_fcount_class = get_counts_by_rbp(data_bf_dmm_masked, anno, data_col_to_merge = 'BF_assignment',
                                                     to_count = 'repClass')
-    dmm_fcount_family.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.rbp_class_type.csv')
+    dmm_fcount_family.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.rbp_class_type.csv')
 
     diff = (prefilter-dmm_fcount_class).fillna(0)
     diff.loc[diff.sum(axis = 1).sort_values().index, diff.sum(axis = 0)>0].plot.bar(
     stacked = True, figsize = (3,3)
     )
     sns.despine()
-    plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.n_masked.pdf')
+    plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.n_masked.pdf')
 
     # counting
     dmm_fcount_family = get_counts_by_rbp(data_bf_dmm_masked, anno, data_col_to_merge = 'BF_assignment',
                                                     to_count = 'repFamily')
-    dmm_fcount_family.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.rbp_family_type.csv')
+    dmm_fcount_family.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.rbp_family_type.csv')
     dmm_fcount_class = get_counts_by_rbp(data_bf_dmm_masked, anno, data_col_to_merge = 'BF_assignment',
                                                     to_count = 'repClass')
-    dmm_fcount_family.to_csv(basedir /'DMM_repeat/name'/ f'{out_stem}.rbp_class_type.csv')
+    dmm_fcount_family.to_csv(f'{basedir}/DMM_repeat/name/intermediates/{out_stem}.rbp_class_type.csv')
 
     # calculate jaccard index
     if not data_bf_dmm_masked[anno.columns].sum(axis = 0).ge(1).all():
@@ -485,7 +485,7 @@ if __name__ == '__main__':
                     vmax = 0.3)
         cm.cax.set_visible(False)
         plt.suptitle('ABC(Dirichlet Mixture Model: BF filtered)', y = 1)
-        plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.jaccard_index.pdf')
+        plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.jaccard_index.pdf')
     else:
         print('RBP with binding site:', cols_to_plot)
 
@@ -493,11 +493,11 @@ if __name__ == '__main__':
         dmm_fcount_family = dmm_fcount_family.loc[dmm_fcount_family.sum(axis = 1)>0, dmm_fcount_family.sum(axis = 0)>0]
         sns.clustermap(dmm_fcount_family.loc[:, ~(dmm_fcount_family.columns=='Simple_repeat')], 
             cmap = 'Greys', metric = 'correlation', figsize = (8,4), xticklabels = 1)
-        plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.family_count.pdf')
+        plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.family_count.pdf')
         dmm_fcount_class = dmm_fcount_class.loc[dmm_fcount_class.sum(axis = 1)>0, dmm_fcount_class.sum(axis = 0)>0]
         sns.clustermap(dmm_fcount_class.loc[:, ~(dmm_fcount_class.columns=='Simple_repeat')], 
             cmap = 'Greys', metric = 'correlation', figsize = (5,4), xticklabels = 1)
-        plt.savefig(basedir /'DMM_repeat/name'/ f'{out_stem}.class_count.pdf')
+        plt.savefig(f'{basedir}/DMM_repeat/name/plots/{out_stem}.class_count.pdf')
     except Exception as e:
         print(e)
     
@@ -515,7 +515,7 @@ if __name__ == '__main__':
         enriched_windows['fc_raw']=fc_raw[c]
         enriched_windows['fc_bar']=fc_bar[c]
         enriched_windows['p_bar_std']=std_bar[c]
-        enriched_windows.to_csv(basedir / 'DMM_repeat/name'/f'{c}.enriched_windows.tsv', sep = '\t')
+        enriched_windows.to_csv(f'{basedir}/DMM_repeat/name/{c}.enriched_windows.tsv', sep = '\t')
         print(f'found {c} enriched windows:', enriched_windows.shape)
         import os
         
@@ -530,9 +530,9 @@ if __name__ == '__main__':
 
     # concat everything and write together
     megaoutput = pd.concat([data_bf_dmm_masked, p_bar, p_raw, fc_raw, fc_bar, std_bar, individual_bfs_dmm], axis = 1)
-    megaoutput.to_csv(basedir / 'DMM_repeat/name'/f'{out_stem}.megaoutputs.tsv', sep = '\t')
+    megaoutput.to_csv(f'{basedir}/DMM_repeat/name/{out_stem}.megaoutputs.tsv', sep = '\t')
 
-    data_bf_dmm.to_csv(basedir / 'DMM_repeat/name'/f'{out_stem}.megaoutputs_unmasked.tsv', sep = '\t')
+    data_bf_dmm.to_csv(f'{basedir}/DMM_repeat/name/{out_stem}.megaoutputs_unmasked.tsv', sep = '\t')
 
 
 

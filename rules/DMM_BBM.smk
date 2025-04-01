@@ -18,19 +18,19 @@ rule fit_beta_mixture_model_CC:
         feature_annotations = config['FEATURE_ANNOTATIONS'],
         table = lambda wildcards: "counts_CC/genome/bgtables/internal/"+libname_to_experiment(wildcards.libname)+'.'+wildcards.clip_sample_label+".tsv.gz",
     output:
-        "beta-mixture_CC/{libname}.{clip_sample_label}.fit.rda",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.goodness_of_fit.pdf",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.weights.tsv",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.alpha.tsv",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.null.alpha.tsv",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.mixture_weight.tsv",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.fit.rda",
+        "beta-mixture_CC/plots/{libname}.{clip_sample_label}.goodness_of_fit.pdf",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.weights.tsv",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.alpha.tsv",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.null.alpha.tsv",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.mixture_weight.tsv",
     params:
         error_out_file = "error_files/fit_betaCC.{libname}.{clip_sample_label}.err",
         out_file = "stdout/fit_betaCC.{libname}.{clip_sample_label}.out",
         run_time = "02:40:00",
         cores = "1",
         memory = 64000,
-        root_folder = lambda wildcards, output: Path(output[0]).parent
+        root_folder = lambda wildcards, output: Path(output[0]).parent.parent
     conda:
         "envs/DMM.yaml"
     benchmark: "benchmarks/DMM/fit_beta.{libname}.{clip_sample_label}"
@@ -47,12 +47,12 @@ rule fit_beta_mixture_model_CC:
 
 rule analyze_beta_mixture_results_CC:
     input:
-        "beta-mixture_CC/{libname}.{clip_sample_label}.fit.rda",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.goodness_of_fit.pdf",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.weights.tsv",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.alpha.tsv",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.null.alpha.tsv",
-        "beta-mixture_CC/{libname}.{clip_sample_label}.mixture_weight.tsv",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.fit.rda",
+        "beta-mixture_CC/plots/{libname}.{clip_sample_label}.goodness_of_fit.pdf",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.weights.tsv",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.alpha.tsv",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.null.alpha.tsv",
+        "beta-mixture_CC/intermediates/{libname}.{clip_sample_label}.mixture_weight.tsv",
         feature_annotations = config['FEATURE_ANNOTATIONS'],
         table = lambda wildcards: "counts_CC/genome/bgtables/internal/"+libname_to_experiment(wildcards.libname)+'.'+wildcards.clip_sample_label+".tsv.gz",
     output:
@@ -67,70 +67,6 @@ rule analyze_beta_mixture_results_CC:
     conda:
         "envs/tensorflow.yaml"
     benchmark: "benchmarks/DMM/analyze.{libname}.{clip_sample_label}"
-    shell:
-        """
-        python {SCRIPT_PATH}/analyze_betabinom_mixture_most_enriched.py \
-            {params.root_folder} \
-            {wildcards.libname}.{wildcards.clip_sample_label} \
-            {input.table} \
-            {input.feature_annotations}
-        """
-
-rule fit_beta_mixture_model_another_lib:
-    input:
-        feature_annotations = config['FEATURE_ANNOTATIONS'],
-        table = lambda wildcards: f"counts/genome/bgtables/{wildcards.bg_sample_label}/"+libname_to_experiment(wildcards.libname)+f".{wildcards.clip_sample_label}.tsv.gz"
-    output:
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.fit.rda",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.goodness_of_fit.pdf",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.weights.tsv",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.alpha.tsv",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.null.alpha.tsv",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.mixture_weight.tsv",
-    params:
-        error_out_file = "error_files/fit_beta.{bg_sample_label}.{libname}.{clip_sample_label}.err",
-        out_file = "error_files/fit_beta.{bg_sample_label}.{libname}.{clip_sample_label}.out",
-        run_time = "00:40:00",
-        cores = "1",
-        root_folder = lambda wildcards, output: Path(output[0]).parent,
-        memory = 64000,
-    conda:
-        "envs/DMM.yaml"
-    benchmark: "benchmarks/DMM/fit_model.{libname}.{clip_sample_label}.{bg_sample_label}"
-    shell:
-        """
-        Rscript --vanilla {SCRIPT_PATH}/fit_BBM.R \
-            {input.table} \
-            {input.feature_annotations} \
-            {wildcards.libname}.{wildcards.clip_sample_label} \
-            {wildcards.libname}.{wildcards.bg_sample_label} \
-            {params.root_folder} \
-            {wildcards.libname}.{wildcards.clip_sample_label} 
-        """
-
-
-rule analyze_beta_mixture_results_another_lib:
-    input:
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.fit.rda",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.goodness_of_fit.pdf",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.weights.tsv",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.alpha.tsv",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.null.alpha.tsv",
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.mixture_weight.tsv",
-        feature_annotations = config['FEATURE_ANNOTATIONS'],
-        table = lambda wildcards: f"counts/genome/bgtables/{wildcards.bg_sample_label}/"+libname_to_experiment(wildcards.libname)+f".{wildcards.clip_sample_label}.tsv.gz"
-    output:
-        "beta-mixture/{bg_sample_label}/{libname}.{clip_sample_label}.enriched_windows.tsv"
-    params:
-        error_out_file = "error_files/analyze_beta.{bg_sample_label}.{libname}.{clip_sample_label}.err",
-        out_file = "stdout/analyze_beta.{bg_sample_label}.{libname}.{clip_sample_label}.err",
-        run_time = "00:40:00",
-        cores = "1",
-        root_folder = lambda wildcards, output: Path(output[0]).parent,
-        memory = 32000,
-    conda:
-        "envs/tensorflow.yaml"
-    benchmark: "benchmarks/DMM/analyze.{libname}.{clip_sample_label}.{bg_sample_label}"
     shell:
         """
         python {SCRIPT_PATH}/analyze_betabinom_mixture_most_enriched.py \
@@ -163,11 +99,11 @@ rule fit_DMM:
         feature_annotations = config['FEATURE_ANNOTATIONS'],
         table = "counts/genome/megatables/{libname}.tsv.gz",
     output:
-        "DMM/{libname}.goodness_of_fit.pdf",
-        "DMM/{libname}.alpha.tsv",
-        "DMM/{libname}.null.alpha.tsv",
-        "DMM/{libname}.mixture_weight.tsv",
-        "DMM/{libname}.weights.tsv"
+        "DMM/plots/{libname}.goodness_of_fit.pdf",
+        "DMM/intermediates/{libname}.alpha.tsv",
+        "DMM/intermediates/{libname}.null.alpha.tsv",
+        "DMM/intermediates/{libname}.mixture_weight.tsv",
+        "DMM/intermediates/{libname}.weights.tsv"
     params:
         error_out_file = "error_files/fit_DMM.{libname}.err",
         out_file = "stdout/DMM.{libname}.internal.out",
@@ -189,11 +125,11 @@ rule fit_DMM:
 
 rule analyze_DMM:
     input:
-        "DMM/{libname}.alpha.tsv",
-        "DMM/{libname}.mixture_weight.tsv",
+        "DMM/intermediates/{libname}.alpha.tsv",
+        "DMM/intermediates/{libname}.mixture_weight.tsv",
         "counts/genome/megatables/{libname}.tsv.gz",
         'QC/mapping_stats.csv',
-        "DMM/{libname}.weights.tsv",
+        "DMM/intermediates/{libname}.weights.tsv",
         'mask/{libname}.genome_mask.csv'
     output:
         expand("DMM/{libname}.{sample_labels}.enriched_windows.tsv", 

@@ -12,6 +12,8 @@ annotation = args[2]
 basedir= args[3]
 out_stem = args[4] 
 dir.create(basedir, showWarnings = FALSE, recursive = TRUE)
+dir.create(paste0(basedir, "/plots"), showWarnings = FALSE, recursive = TRUE)
+dir.create(paste0(basedir, "/intermediates"), showWarnings = FALSE, recursive = TRUE)
 
 options(width=70, digits=2)
 full <- TRUE 
@@ -42,14 +44,14 @@ print(ncol(count))
 cores = detectCores()
 if (full) {
 fit <- mclapply(seq(min_component, max_component, component_gap), dmn, count=count, verbose=TRUE, mc.cores = cores)
-save(fit, file=file.path(basedir, paste0(out_stem, ".fit.rda")))
-} else load(file = file.path(basedir, paste0(out_stem, ".fit.rda")))
+save(fit, file=file.path(paste0(basedir, "/intermediates"), paste0(out_stem, ".fit.rda")))
+} else load(file = file.path(paste0(basedir, "/intermediates"), paste0(out_stem, ".fit.rda")))
 
 # plot Laplace against k
 lplc <- sapply(fit, laplace)
 aic <- sapply(fit, AIC)
 bic <- sapply(fit, BIC)
- pdf(file.path(basedir, paste0(out_stem, ".goodness_of_fit.pdf")))
+ pdf(file.path(paste0(basedir, "/plots"), paste0(out_stem, ".goodness_of_fit.pdf")))
  plot(aic, type="b", xlab="Number of Dirichlet Components(k)",ylab="AIC")
  plot(bic, type="b", xlab="Number of Dirichlet Components(k)",ylab="BIC")
  plot(lplc, type="b", xlab="Number of Dirichlet Components(k)",ylab="Model Fit(Laplace)")
@@ -62,17 +64,17 @@ bic <- sapply(fit, BIC)
 # reports the weight $\pi$ and $\theta$
 # theta = \sum alphas, higher, more concentrated cluster
 weights = mixturewt(best)
-write_tsv(data.frame(weights) %>% rownames_to_column(), file.path(basedir, paste0(out_stem, '.weights.tsv')))
+write_tsv(data.frame(weights) %>% rownames_to_column(), file.path(paste(basedir, "/intermediates", sep = ""), paste0(out_stem, '.weights.tsv')))
 
 ################ CLUSTER LABELLING ################
 # contribution of each taxonomic group to the Dirichlet components fitted 
 fitted_df = data.frame(fitted(best, assign = FALSE))%>% rownames_to_column()
-write_tsv(fitted_df, file.path(basedir, paste0(out_stem, '.alpha.tsv')))
+write_tsv(fitted_df, file.path(paste0(basedir, "/intermediates"), paste0(out_stem, '.alpha.tsv')))
 
 # write null
 fitted_df_null = data.frame(fitted(fit[[1]], assign = FALSE))%>% rownames_to_column()
 names(fitted_df_null) <- c('rowname', 'single_component_weight')
-write_tsv(fitted_df_null, file.path(basedir, paste0(out_stem, '.null.alpha.tsv')))
+write_tsv(fitted_df_null, file.path(paste0(basedir, "/intermediates"), paste0(out_stem, '.null.alpha.tsv')))
 
 # how does the model differ from a single component DMM
 p0 <- fitted(fit[[1]], scale=TRUE) # scale by theta
@@ -88,5 +90,5 @@ row.names(mixture_df) <- count_df$name
 anno_df = read_tsv(annotation)
 annotated_mixture=merge(mixture_df, anno_df, by.x='row.names', by.y='name')
 
-write_tsv(data.frame(annotated_mixture) %>% rownames_to_column(), file.path(basedir, paste0(out_stem,'.mixture_weight.tsv')))
+write_tsv(data.frame(annotated_mixture) %>% rownames_to_column(), file.path(paste0(basedir, "/intermediates"), paste0(out_stem,'.mixture_weight.tsv')))
 

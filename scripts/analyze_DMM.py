@@ -271,17 +271,17 @@ if __name__=='__main__':
     fc_raw_thres = 1
 
     # fitted parameters and outputs
-    data = pd.read_csv(basedir/f'DMM/{out_stem}.mixture_weight.tsv', sep = '\t', index_col = 0)
+    data = pd.read_csv(f'{basedir}/DMM/intermediates/{out_stem}.mixture_weight.tsv', sep = '\t', index_col = 0)
     data.set_index('Row.names', inplace = True)
 
     mixture_weight_only = data.loc[:, data.columns.str.startswith('V')]
     mixture_weight_only.columns
     data['cluster']=mixture_weight_only.idxmax(axis = 1)
 
-    weights = pd.read_csv(basedir/f'DMM/{out_stem}.weights.tsv', sep = '\t', index_col = 0)
+    weights = pd.read_csv(f'{basedir}/DMM/intermediates/{out_stem}.weights.tsv', sep = '\t', index_col = 0)
     weights.index = [f'V{i}' for i in weights.index]
 
-    model_alphas = pd.read_csv(basedir/f'DMM/{out_stem}.alpha.tsv', sep = '\t',
+    model_alphas = pd.read_csv(f'{basedir}/DMM/intermediates/{out_stem}.alpha.tsv', sep = '\t',
                         index_col = 0) # RBP by components, B * K
     model_alphas.columns = [i.replace('X', 'V') for i in model_alphas.columns]
     model_mean = model_alphas.div(model_alphas.sum(axis = 0), axis = 1)
@@ -306,8 +306,8 @@ if __name__=='__main__':
     sns.clustermap(model_mean.T,
             cbar_kws = {'label': '\bar{p}'},
             metric = 'correlation', cmap = 'Greys', figsize = (4,4))
-    plt.savefig(basedir / 'DMM'/ f'{out_stem}.model_mean.pdf')
-
+    plt.savefig(f'{basedir}/DMM/plots/{out_stem}.model_mean.pdf')
+#f'{basedir}/DMM/plots/
 
     # calculate FC over null for each component
     component_fc = (model_mean).div(mapped_reads_fraction, axis = 0).T
@@ -316,11 +316,11 @@ if __name__=='__main__':
     sns.clustermap(component_fc,
             cbar_kws = {'label': 'FC over total mapped reads'},
             metric = 'correlation', cmap = 'Greys', figsize = (4,4))
-    plt.savefig(basedir / 'DMM'/ f'{out_stem}.component_fc.pdf')
+    plt.savefig(f'{basedir}/DMM/plots/{out_stem}.component_fc.pdf')
 
     # annotate cluster: elbow method.
     anno = annotate_clusters(model_mean, plot = True, model_std = model_std)
-    plt.savefig(basedir / 'DMM'/ f'{out_stem}.elbow_labelling.pdf')
+    plt.savefig(f'{basedir}/DMM/plots/{out_stem}.elbow_labelling.pdf')
 
     # calculate entropy and filter, summarize clusters
     ent = model_mean.apply(lambda col: entropy(col, mapped_reads_fraction), axis = 0).sort_values()
@@ -345,10 +345,10 @@ if __name__=='__main__':
     anno.sum(axis = 0).sort_values().plot.barh(ax = ax[2], color = 'grey')
     ax[2].set_ylabel('# clusters assigned')
     plt.tight_layout()
-    plt.savefig(basedir / 'DMM'/ f'{out_stem}.cluster_summary.pdf')
+    plt.savefig(f'{basedir}/DMM/plots/{out_stem}.cluster_summary.pdf')
 
-    annotation_summary.to_csv(basedir / 'DMM'/ f'{out_stem}.cluster_summary.csv')
-    anno.to_csv(basedir / 'DMM'/ f'{out_stem}.cluster_annotation_binary.csv')
+    annotation_summary.to_csv(f'{basedir}/DMM/{out_stem}.cluster_summary.csv')
+    anno.to_csv(f'{basedir}/DMM/{out_stem}.cluster_annotation_binary.csv')
 
     # calculate effect size: p_bar, fc_bar and p_bar's std
     ezik = data[model_mean.columns]
@@ -362,11 +362,11 @@ if __name__=='__main__':
     var_bar.columns = model_var.index
     std_bar = np.sqrt(var_bar)
 
-    p_bar.to_csv(basedir / 'DMM'/ f'{out_stem}.p_bar.csv')
-    p_raw.to_csv(basedir / 'DMM'/ f'{out_stem}.p_raw.csv')
-    fc_bar.to_csv(basedir / 'DMM'/ f'{out_stem}.fc_bar.csv')
-    fc_raw.to_csv(basedir / 'DMM'/ f'{out_stem}.fc_raw.csv')
-    std_bar.to_csv(basedir / 'DMM'/ f'{out_stem}.p_bar_std.csv')
+    p_bar.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.p_bar.csv')
+    p_raw.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.p_raw.csv')
+    fc_bar.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.fc_bar.csv')
+    fc_raw.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.fc_raw.csv')
+    std_bar.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.p_bar_std.csv')
 
     # plot model fit for p_bar and p_raw
     f, axes = plt.subplots(2, math.ceil(p_bar.shape[1]/2), figsize = (8, 5))
@@ -380,7 +380,7 @@ if __name__=='__main__':
         ax.set_title(f'{col}\n r={r:.2f}\n p={pval:.2E}')
     sns.despine()
     plt.tight_layout()
-    plt.savefig(basedir / 'DMM'/ f'{out_stem}.p_fit.pdf')
+    plt.savefig(f'{basedir}/DMM/plots/{out_stem}.p_fit.pdf')
 
     # visualize regions distribution for each cluster
     col = 'feature_type_top'
@@ -394,8 +394,8 @@ if __name__=='__main__':
             cmap = 'Greys', metric = 'cosine', cbar_kws ={'label': '%window', }, cbar_pos = (1,0.2,0.02,0.6),
             figsize = (5,6), xticklabels = 1, yticklabels = 1,
             row_colors = anno_as_color.T.sort_index().T)
-    plt.savefig(basedir / 'DMM'/ f'{out_stem}.cluster_region_type.pdf')
-    cluster_count.to_csv(basedir / 'DMM'/ f'{out_stem}.cluster_region_type.csv')
+    plt.savefig(f'{basedir}/DMM/plots/{out_stem}.cluster_region_type.pdf')
+    cluster_count.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.cluster_region_type.csv')
 
     # Calculate Bayes Factor (hypothesis wise)
     comp_mapping = {}
@@ -423,12 +423,12 @@ if __name__=='__main__':
         individual_bfs_dmm.append(individual_LR)
 
     individual_bfs_dmm = pd.concat(individual_bfs_dmm, axis = 1)
-    bfs_dmm.to_csv(basedir / 'DMM'/ f'{out_stem}.BF_hypothesis.csv')
-    individual_bfs_dmm.to_csv(basedir / 'DMM'/ f'{out_stem}.BF_individual.csv') 
+    bfs_dmm.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.BF_hypothesis.csv')
+    individual_bfs_dmm.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.BF_individual.csv') 
 
     # ====== By Hypothesis =====
     data_bf_dmm, dmm_fcount = filter_by_bf(bfs_dmm, individual_bfs_dmm, data = data, anno = anno, comp_mapping = comp_mapping)
-    dmm_fcount.to_csv(basedir / 'DMM'/ f'{out_stem}.rbp_region_type.BF_filtered.csv')
+    dmm_fcount.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.rbp_region_type.BF_filtered.csv')
 
     # calculate jaccard index
     if not data_bf_dmm[anno.columns].sum(axis = 0).ge(1).all():
@@ -443,7 +443,7 @@ if __name__=='__main__':
                     vmax = 1)
         cm.cax.set_visible(False)
         plt.suptitle('ABC(Dirichlet Mixture Model: BF filtered)', y = 1)
-        plt.savefig(basedir / 'DMM'/ f'{out_stem}.jaccard_index.pdf')
+        plt.savefig(f'{basedir}/DMM/plots/{out_stem}.jaccard_index.pdf')
     else:
         print('RBP with binding site:', cols_to_plot)
 
@@ -452,12 +452,12 @@ if __name__=='__main__':
         sns.set_palette('tab20c')
         plt.style.use('seaborn-white')
         dmm_fcount.plot.barh(stacked = True)
-        dmm_fcount.to_csv(basedir / 'DMM'/ f'{out_stem}.rbp_region_type.csv')
+        dmm_fcount.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.rbp_region_type.csv')
         sns.despine()
         plt.xlabel('# windows')
         plt.legend(bbox_to_anchor=(1.2,1))
         plt.tight_layout()
-        plt.savefig(basedir / 'DMM'/ f'{out_stem}.region_type_count_by_hypothesis_RBPwise.pdf')
+        plt.savefig(f'{basedir}/DMM/plots/{out_stem}.region_type_count_by_hypothesis_RBPwise.pdf')
     except Exception as e:
         print('Fail to plot *_rbp_region_type', e)
     
@@ -466,13 +466,13 @@ if __name__=='__main__':
         fcount_by_hypothesis = data_bf_dmm.groupby(by = ['BF_assignment'])['feature_type_top'].value_counts().unstack().fillna(0)
         fcount_by_hypothesis.index = fcount_by_hypothesis.index.map(lambda component: component+':'+','.join(
             [r.split('.')[1] for r in anno.columns[anno.loc[component]].tolist()]))
-        fcount_by_hypothesis.to_csv(basedir / 'DMM'/ f'{out_stem}.hypothesis_region_type.csv')
+        fcount_by_hypothesis.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.hypothesis_region_type.csv')
         fcount_by_hypothesis.plot.barh(stacked = True)
         sns.despine()
         plt.legend(bbox_to_anchor=(1.2,1))
         plt.xlabel('# windows')
         plt.tight_layout()
-        plt.savefig(basedir / 'DMM'/ f'{out_stem}.region_type_count_by_hypothesis.pdf')
+        plt.savefig(f'{basedir}/DMM/plots/{out_stem}.region_type_count_by_hypothesis.pdf')
     except Exception as e:
         print('Fail to plot *_hypothesis_region_type', e)
 
@@ -495,13 +495,13 @@ if __name__=='__main__':
 
         indiv_assignment_fcount_unmasked = count_by_rbp(data_bf_dmm, anno)
         indiv_assignment_fcount = count_by_rbp(data_bf_dmm_masked, anno)
-        indiv_assignment_fcount.to_csv(basedir / 'DMM'/ f'{out_stem}.region_type_count_by_individual.csv')
+        indiv_assignment_fcount.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.region_type_count_by_individual.csv')
         indiv_assignment_fcount.T.sort_index().T.plot.barh(stacked = True)
         sns.despine()
         plt.legend(bbox_to_anchor=(1,1))
         plt.xlabel('# genomic window')
         plt.tight_layout()
-        plt.savefig(basedir / 'DMM'/ f'{out_stem}.region_type_count_by_individual.pdf')
+        plt.savefig(f'{basedir}/DMM/plots/{out_stem}.region_type_count_by_individual.pdf')
         
         # plot masked: region type
         f, axes = plt.subplots(1,2, sharex = True, sharey = True, figsize = (6,3))
@@ -509,7 +509,7 @@ if __name__=='__main__':
         diff = (indiv_assignment_fcount_unmasked-indiv_assignment_fcount).fillna(0)
         diff.loc[diff.sum(axis =1).sort_values().index, diff.sum(axis = 0)>0].plot.barh(
             stacked = True, ax = axes[0])
-        diff.to_csv(basedir / 'DMM'/ f'{out_stem}.region_type_masked.csv')
+        diff.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.region_type_masked.csv')
         
         
         # plot masked: transcript type
@@ -518,13 +518,13 @@ if __name__=='__main__':
         diff = (indiv_assignment_fcount_unmasked-indiv_assignment_fcount).fillna(0)
         diff.loc[diff.sum(axis =1).sort_values().index, diff.sum(axis = 0)>0].plot.barh(
             stacked = True, ax = axes[1])
-        diff.to_csv(basedir / 'DMM'/ f'{out_stem}.transcript_type_masked.csv')
+        diff.to_csv(f'{basedir}/DMM/intermediates/{out_stem}.transcript_type_masked.csv')
         sns.despine()
         ax[0].legend(bbox_to_anchor=(1,1))
         ax[1].legend(bbox_to_anchor=(1,1))
         plt.xlabel('# genomic window masked')
         plt.tight_layout()
-        plt.savefig(basedir / 'DMM'/ f'{out_stem}.region_type_masked.pdf')
+        plt.savefig(f'{basedir}/DMM/plots/{out_stem}.region_type_masked.pdf')
         
     except Exception as e:
         print('Fail to plot jaccard and region_type', e)
@@ -546,7 +546,7 @@ if __name__=='__main__':
         enriched_windows['fc_raw']=fc_raw[c]
         enriched_windows['fc_bar']=fc_bar[c]
         enriched_windows['p_bar_std']=std_bar[c]
-        enriched_windows.to_csv(basedir / 'DMM'/ f'{c}.enriched_windows.tsv', sep = '\t')
+        enriched_windows.to_csv(f'{basedir}/DMM/{c}.enriched_windows.tsv', sep = '\t')
         print(f'found {c} enriched windows:', enriched_windows.shape)
 
     # --- output everything ---
@@ -560,9 +560,9 @@ if __name__=='__main__':
 
     # concat everything and write together
     megaoutput = pd.concat([data_bf_dmm_masked, p_bar, p_raw, fc_raw, fc_bar, std_bar, individual_bfs_dmm], axis = 1)
-    megaoutput.to_csv(basedir / 'DMM'/ f'{out_stem}.megaoutputs.tsv', sep = '\t')
+    megaoutput.to_csv(f'{basedir}/DMM/{out_stem}.megaoutputs.tsv', sep = '\t')
 
-    data_bf_dmm.to_csv(basedir / 'DMM'/ f'{out_stem}.megaoutputs_unmasked.tsv', sep = '\t')
+    data_bf_dmm.to_csv(f'{basedir}/DMM/{out_stem}.megaoutputs_unmasked.tsv', sep = '\t')
 
 
 

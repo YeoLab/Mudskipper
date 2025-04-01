@@ -9,7 +9,7 @@ FINEMAPPING: FALSE
 
 # Specify which of the Dirichlet multinomial mixture (DMM) and beta-binomial mixture (BBM) models you want to run. 
 DMM: True
-BBM: False
+BBM: True
 # Setting both parameters to false will result in pre-processing but no analysis. 
 
 # ADAPTOR_PATH: /projects/ps-yeolab4/software/eclip/0.7.0/examples/inputs

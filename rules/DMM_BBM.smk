@@ -28,6 +28,7 @@ rule fit_beta_mixture_model_CC:
         error_out_file = "error_files/fit_betaCC.{libname}.{clip_sample_label}.err",
         out_file = "stdout/fit_betaCC.{libname}.{clip_sample_label}.out",
         run_time = "02:40:00",
+        seed = config['SEED'],
         cores = "1",
         memory = 64000,
         root_folder = lambda wildcards, output: Path(output[0]).parent.parent
@@ -42,7 +43,8 @@ rule fit_beta_mixture_model_CC:
             {wildcards.libname}.{wildcards.clip_sample_label} \
             {wildcards.libname}.internal \
             {params.root_folder} \
-            {wildcards.libname}.{wildcards.clip_sample_label} 
+            {wildcards.libname}.{wildcards.clip_sample_label} \
+            {params.seed}
         """
 
 rule analyze_beta_mixture_results_CC:
@@ -111,6 +113,7 @@ rule fit_DMM:
         memory = 40000,
         cores = "8",
         root_folder = "DMM",
+        seed = config['SEED']
     benchmark: "benchmarks/DMM/fit.{libname}"
     conda:
         "envs/DMM.yaml"
@@ -120,7 +123,8 @@ rule fit_DMM:
             {input.table} \
             {input.feature_annotations} \
             {params.root_folder} \
-            {wildcards.libname} 
+            {wildcards.libname} \
+            {params.seed}
         """
 
 rule analyze_DMM:

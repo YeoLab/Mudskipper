@@ -11,9 +11,14 @@ fl=args[1]
 annotation = args[2]
 basedir= args[3]
 out_stem = args[4] 
+seed = args[5]
 dir.create(basedir, showWarnings = FALSE, recursive = TRUE)
 dir.create(paste0(basedir, "/plots"), showWarnings = FALSE, recursive = TRUE)
 dir.create(paste0(basedir, "/intermediates"), showWarnings = FALSE, recursive = TRUE)
+
+# Set the seed:
+RNGkind("L'Ecuyer-CMRG")
+set.seed(seed)
 
 options(width=70, digits=2)
 full <- TRUE 
@@ -43,7 +48,7 @@ print(ncol(count))
 # fit data k=1 to max_component, using a subset of data
 cores = detectCores()
 if (full) {
-fit <- mclapply(seq(min_component, max_component, component_gap), dmn, count=count, verbose=TRUE, mc.cores = cores)
+fit <- mclapply(seq(min_component, max_component, component_gap), dmn, count=count, seed = seed, verbose=TRUE, mc.cores = cores, mc.set.seed = TRUE)
 save(fit, file=file.path(paste0(basedir, "/intermediates"), paste0(out_stem, ".fit.rda")))
 } else load(file = file.path(paste0(basedir, "/intermediates"), paste0(out_stem, ".fit.rda")))
 

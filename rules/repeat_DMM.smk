@@ -44,7 +44,8 @@ rule fit_DMM:
         run_time = "12:00:00",
         memory = 16000,
         cores = "6",
-        root_folder = lambda wildcards, output: Path(output[0]).parent.parent
+        root_folder = lambda wildcards, output: Path(output[0]).parent.parent,
+        seed = config["SEED"]
     benchmark: "benchmarks/DMM/fit.{libname}.{repeat_type}"
     conda:
         "envs/DMM.yaml"
@@ -53,7 +54,8 @@ rule fit_DMM:
         Rscript --vanilla {SCRIPT_PATH}/fit_DMM_multidimen_repeat.R \
             {input.table} \
             {params.root_folder} \
-            {wildcards.libname} 
+            {wildcards.libname} \
+            {params.seed}
         """
 
 rule analyze_DMM:

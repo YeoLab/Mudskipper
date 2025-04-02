@@ -13,9 +13,14 @@ ip_col = args[3]
 in_col = args[4]
 basedir= args[5]
 out_stem = args[6]
+seed = args[7]
 dir.create(basedir, showWarnings = FALSE, recursive = TRUE)
 dir.create(paste0(basedir, "/plots"), showWarnings = FALSE, recursive = TRUE)
 dir.create(paste0(basedir, "/intermediates"), showWarnings = FALSE, recursive = TRUE)
+
+# Set the seed:
+RNGkind("L'Ecuyer-CMRG")
+set.seed(seed)
 
 sample_cols = c(ip_col, in_col)
 print(sample_cols)
@@ -48,7 +53,7 @@ print(ncol(count))
 # fit data k=1 to max_component, using a subset of data
 cores = min(detectCores(), length(comp_attempt))
 if (full) {
-fit <- mclapply(comp_attempt, dmn, count=count, verbose=TRUE, mc.cores = cores)
+fit <- mclapply(comp_attempt, dmn, count=count, seed = seed, verbose=TRUE, mc.cores = cores, mc.set.seed = TRUE)
 save(fit, file=file.path(paste0(basedir, "/intermediates"), paste0(out_stem, ".fit.rda")))
 } else load(file = file.path(paste0(basedir, "/intermediates"), paste0(out_stem, ".fit.rda")))
 

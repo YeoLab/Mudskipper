@@ -2,100 +2,127 @@
 - [Link to original ABC paper](https://www.nature.com/articles/s41592-022-01708-8)
 
 # Installation
-- Main environment: Snakemake 7.3.8 and scipy:  
-    - [Snakemake Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html)
-    - install snakemake 7.3.8 using `rules/envs/snakemake.yaml`.
-    - Snakemake 8 has different command line options that will need modification in `--profile`
+There are 2 methods for installing/running mudskipper. A containerized version using singularity, and a more basic version using conda. We encourage users to adopt the Singularity version of Mudskipper because it streamlines setup by requiring only Singularity, STAR, Scipy, and Snakemake. For users without Singularity or superuser privileges, we provide an option for a purely conda based installation. 
+
+## Using Singularity
+- Download this repository using `git clone https://github.com/YeoLab/Mudskipper.git`.
+- Create a conda environment to run Mudskipper in.
+    - `conda create -n mudskipper_s snakemake==7.32.4 scipy==1.15.2 sra-tools==2.11.0 star==2.7.10b`
+    - Note: Mudskipper depends on Snakemake version 7.3.8 to run, and is incompatible with Snakemake version > 8.
 - Singularity 3.11: [Singularity](https://docs.sylabs.io/guides/3.0/user-guide/build_a_container.html).
     - If setting up Mudskipper on a server/computing cluster, it is reccomended that you ask a system admin to install singularity. This is to prevent potential permission issues. 
     - It is also possible to install singularity via conda, though this is not reccomended: [install via conda](https://anaconda.org/conda-forge/singularity)
-- Download this repository by `git clone https://github.com/YeoLab/Mudskipper.git`.
 
+## Using Conda
+Work in progress. 
 
-# How to run. (Using ABC as an example)
-1. Download data from [SRA](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE205536). 
-    - `utils/download_sra.smk` this script can be used to complete the download.
-2. Prepare config and manifest `PATH_TO_YOUR_CONFIG`. Example inputs:
-    - config file: `config/oligose_k562.yaml`
-    - manifest: `config/ABC_2rep.csv`
-    - barcode csv: `config/ABC_barcode.csv`
-3. Adjust profile for your cluster and computing resource:
-    - see profiles/tscc2 as an example
-    - for each option, [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
-4. Run snakemake
+# How to run. (Using ABC-CLIP data from original paper as an example)
+
+## Yeo lab internal example (only for Yeo lab members)
+Please see yeo_lab_internal.md (work in progress). 
+
+## Example with singularity:
+1. Activate the conda environment.
+   - `conda activate mudskipper_s`
+2. Download data from [SRA](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE205536) using the fasterq-dump command from SRA toolkit:
+   - `fasterq-dump SRR19547040 -O path/to/save/data`
+   - `fasterq-dump SRR19547041 -O path/to/save/data`
+   - `cd path/to/save/data`
+   - `gzip SRR19547040.fastq SRR19547041.fastq` 
+3. Prepare config file `example/example.yaml`. For this example, you should only have to edit two lines of the config:
+    - `REPO_PATH`: This must be changed to the absolute path to the Mudskipper repository that you cloned during the installation step. 
+    - `WORKDIR`: This must be changed to the absolute path to the directory where you want Mudskipper to save the results/intermediate files. 
+   When running Mudskipper with your own data, you will be required to edit more of the configuration.
+4. Prepare manifest file `example/example_manifest.csv`:
+    - `fastq`: replace `path/to/` with the absolute path to the directory you saved the fastq files to in step 3.
+5. Download/create additional annotation files (must be done inside of Mudskipper's annotations folder).
+    - Download the repeat table:
+        - `rsync -a -P rsync://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/rmsk.txt.gz ./repeatmasker.grch38.tsv.gz`
+    - Download the genome reference:
+        - `curl -L -O "https://www.encodeproject.org/files/GRCh38_no_alt_analysis_set_GCA_000001405.15/@@download/GRCh38_no_alt_analysis_set_GCA_000001405.15.fasta.gz"`
+        - `gunzip GRCh38_no_alt_analysis_set_GCA_000001405.15.fasta.gz`
+    - Generate the STAR reference:
+        - `STAR --runThreadN 8 --runMode genomeGenerate --genomeDir genome_ref --genomeFastaFiles GRCh38_no_alt_analysis_set_GCA_000001405.15.fasta --sjdbGTFtagExonParentTranscript gencode.v38.annotation.gff3.gz`
+6. Adjust profile for your cluster and computing resource:
+    - An example profile is provided in `profiles/tscc2` based on the San Diego Supercomputer Center’s Triton Shared Computing Cluster [(TSCC)](https://www.sdsc.edu/systems/tscc/user_guide.html). How much this example needs to be edited will depend on the similarity between your system and TSCC. 
+    - for more profile options, [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
+7. Run snakemake:
     ```
     snakemake -s Mudskipper.smk \
-        --configfile config/preprocess_config/oligose_k562_noalt.yaml \
+        --configfile example/example.yaml \
         --profile profiles/tscc2
     ```
-    - `--configfile`: yaml file to specify your inputs, including where are the fastqs, what are the barcode, what reference genome, is the run paired or single end,...etc.
     - Add `-n` to the command in order to complete a dry run (sets up snakemake architecture without actually running). 
-    - the rest of the options are in `--profile`. Adjust as needed. [see documentation](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
+    - the rest of the options are in `--profile`.
+      
+When running Mudskipper with your own data, you will be required to edit more of the configuration. Refer to the Configuration file section to learn what to include in your configuration.
 
-Refer to the following sections to learn what to include in your configuration.
+## Example with Conda:
+work in progress
 
 # Configuration file:
 
 ## Options for Input files
 
-### `MANIFEST`: a CSV file specifying FASTQ file locations and replicate information
-All FASTQ files in the same manifest should have the same combinations of barcodes.
-- Example: `config/ABC_2rep.csv`
-- columns:
-    - `fastq1`&`fastq2`: *.fastq.gz file for read1 and read 2
-    - `libname`: unique names for each library. Should not contain space, special characters such as #,%,*
-    - `experiment`: unique names for experiment. **Rows with the same `experiment` will be treated as replicates.** Should not contain space, special characters such as #,%,*
+- `MANIFEST`: a CSV file specifying FASTQ file locations and replicate information
+    - All FASTQ files in the same manifest should have the same combinations of barcodes.
+    - Example: `example/example_manifest.csv`
+    - columns:
+        - `fastq1`&`fastq2`: *.fastq.gz file for read1 and read 2
+        - `libname`: unique names for each library. Should not contain space, special characters such as #,%,*
+        - `experiment`: unique names for experiment. **Rows with the same `experiment` will be treated as replicates.** Should not contain space, special characters such as #,%,*
+- `barcode_csv`: specifies the barcode sequencing information for each Antibody/RBP.
+    - Example: `example/example_barcode.csv`
+    - delimiter: `:`
+    - columns:
+        - 1st column: barcode sequence
+        - 2nd column: Antibody/RBP name, Should not contain space, special characters such as #,%,*.
+- `WORKDIR`: output directory.
+- `SCRIPT_PATH`: Path to the location of Mudskipper scripts. 
 
-### `barcode_csv`: specifies the barcode sequencing information for each Antibody/RBP.
-- Example: `config/ABC_barcode.csv`
-- Notebook to generate this file (Yeolab internal user): `utils/generate barcode-iter5.ipynb`
-- delimiter: `:`
-- columns:
-    - 1st column: barcode sequence
-        - YeoLab internal protocol: read 2 starts with this sequence. Double check with `zcat READ2.fastq.gz | grep BARCODE_SEQ`. This sequence is reverse complement to the adapter sequence (see notebook for detail)
-        - ABC: read starts with this sequence.
-    - 2nd column: Antibody/RBP name, Should not contain space, special characters such as #,%,*.
-
-## Options to Control Output
-- `WORKDIR`: output directory
-- `RBP_TO_RUN_MOTIF`: list of RBP names to run motif analysis. Must be one of the rows in `barcode_csv`.
-
-## Options to Choose Backgrounds
-By default, if the options below are left blank, the pipeline runs the Dirichlet Multinomial Mixture (DMM) algorithm for multiplex datasets, where RBPs are explicitly compared against each other. DMM is the most effective model for multiplex datasets. There is an option to compare to 'internal control' such as a spike-in or IgG etc with a barcode as background.
+## Background Options. 
+By default, the options below are left blank andthe pipeline runs the Dirichlet Multinomial Mixture (DMM) algorithm for multiplex datasets, where RBPs are explicitly compared against each other. DMM is the most effective model for multiplex datasets. There is an option to compare to 'internal control' such as a spike-in or IgG etc with a barcode as background.
 
 Unfortunately, DMM is not compatible with singleplex datasets. Calling binding sites in singleplex datasets requires an 'external control' (see details below). Without an external control, the process will stop at the read counting stage. The best external control according to Mudskipper benchmark is an eCLIP SMInput.
 
-The backgrounds can be applied to other peak callers such as Skipper, CLIPper, and the Beta-Binomial Mixture (BBM) model.
-
-If you want to include a background library, here's how to do it:
+If you want to include a background library, utilize one of the options below:
 
 ### "Internal control: A barcode that measures background signal, present in the same FASTQ file.
-- `AS_INPUT`: If you have an IgG antibody/spike-in/bead-only control in the multiplex experiment that will serve as the normalization reference, enter its name here. It must be one of the rows in the barcode_csv file. 
+- `AS_INPUT`: If you have an IgG antibody/spike-in/bead-only control in the multiplex experiment that will serve as the normalization reference, enter its name here. It must be identical to one of the entires in the first column of the barcode_csv file. 
 
 ### "External control": a library that is NOT in the same fastq as your oligoCLIP/ABC to serve as the background.
 - specify them in `external_bam` with name of the library (first line, ex `eCLIP_SLBP_SMInput`), followed by  `file:` and `INFORMATIVE_READ`
     ```
     # For example:
     eCLIP_SLBP_SMInput: 
-        file: /tscc/nfs/home/hsher/ps-yeolab5/ENCODE_k562_noalt/output/bams/dedup/genome_R2/SLBP_IN_1.genome.Aligned.sort.dedup.R2.bam
+        file: path/to/SMInput/SLBP_IN_1.genome.Aligned.sort.dedup.R2.bam
         INFORMATIVE_READ: 2
     ```
-- This can be an eCLIP SMInput, total RNA-seq, IgG pull down from another experiment, bead control, spike-ins
-- How to generate them? the bams must be processed with the exact same STAR index as `STAR_DIR`, and is recommended to be processed with the same/similar mapping parameters as this repo or skipper.
+- This can be an eCLIP SMInput, total RNA-seq, IgG pull down from another experiment, bead control, or spike-ins.
+- The bams used must be processed with the exact same STAR index as used in `STAR_DIR`, and it is recommended to be processed with the same/similar mapping parameters as this repo or skipper.
 
+## Analysis options:
+- `DMM`,`BBM`: specify whether to run the Dirichlet multinomial mixture (DMM) model (reccomended) or the beta-binomial mixture (BBM) model. If both options are left blank, then mudskipper just completes pre-processing without further analysis.
+- `FINEMAPPING`: specify whether or not to complete fineapping analysis. Note that this is required to perform motif analysis.
+- `RBP_TO_RUN_MOTIF`: list of RBP names to run motif analysis. Must be one of the RBPs listed in `barcode_csv`. Note that this requires finemapping.
+- `READ_TYPE`: Either "paired" for paired end or "single" for single end. 
+- `INFORMATIVE_READ`: if using single end data, enter 1. if using paired-end data, enter read (1 or 2) corresponding to crosslink site
+- `SEED`: specify the seed to be used for model fitting. 
 
 ## Preprocessing Options:
-- `adaptor_fwd`,`adaptor_rev`: adapter sequence to trim. Do not include barcode
-- `tile_length`: we tile adapter sequences of this length so that indels do not interfere with trimming
+- `adaptor_fwd`,`adaptor_rev`: adapter sequence to trim. Do not include barcode. Note, if using single end then only one adaptor sequence is necessary. 
+- `tile_length`: we tile adapter sequences of this length so that indels do not interfere with trimming.
 - `QUALITY_CUTOFF`: default 15. cutadapt params.
-- `umi_length`: Length of unique molecular identifier (UMI).
-- `STAR_DIR`: Directory of the STAR index.
+- `umi_pattern`: pattern of unique molecular identifier (UMI).
 
 ## Annotation Options:
-- skipper annotations: [follow skipper instructions](https://github.com/YeoLab/skipper#prerequisites) or generate with [skipper_utils](https://github.com/algaebrown/skipper_utils)
-    - Yeolab internal users: Annotations can be found in `/tscc/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/`.
-- `CHROM_SIZES`
-- `GENOMEFA`
+Annotation data for the human reference genome [GRCh38](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.26/) can be found in `/annotations`. It may be necessary to download additional annotation data depending on cell type or species used (or based on user preference). 
+- `REPEAT_TABLE`: Coordinates of repetitive elements, available from UCSC Genome Browser
+- `GENOMEFA`: A reference genome in fasta format. 
+- `STAR_DIR`: Directory of the STAR index.
+- `CHROM_SIZES`: A table of chromosome sizes generated from the STAR index. 
+- `PARTITION`: Gzipped BED file of windows to test.
+- `FEATURE_ANNOTATIONS`: Gzipped TSV file with the following columns: chrom,start,end,name,score,strand,feature_id,feature_bin,feature_type_top,feature_types,gene_name,gene_id, transcript_ids,gene_type_top,transcript_type_top,gene_types,transcript_types.
 
 # Output files
 
@@ -111,14 +138,12 @@ If you want to include a background library, here's how to do it:
             - p= (read in RBP)/(read in window)
             - fc = ((read in RBP)/(read in window))/((all reads in RBP)/total reads)
     - Secondary analysis: 
+        - `finemapping/` contains finemapped binding sites. 
         - `homer/` folder contains motifs generated via [HOMER](http://homer.ucsd.edu/homer/motif/)
-        - `finemapping` contains finemapped binding sites. It isn't great for splice site binding proteins.
-        - `*summary.csv`: What gene types/transcript types/region types are bound.
+        - `*cluster_summary.csv`: A summary of each of the clusters (binding site patterns) found 
     - `intermediates/`
-        - `fit.rda` contains everything including models of various numbers of components(K).
         - `*alpha.tsv` contains the parameter alpha/beta for beta-binomial distribution for each component.
         - `*null_alpha.tsv` contains the parameter alpha/beta for a single component beta-binomial distribution.
-        - `*goodness_of_fit.pdf`: AIC, BIC, log likelihood for model selection.
         - `*label_component.csv`: The labels (bound vs not bound) for each component.
         - `*mixture_weight.tsv`: Contains $E[z_ik]$ values which measure how likely each window belongs to a specific cluster.
         - `*weights`: The "mixture weight".

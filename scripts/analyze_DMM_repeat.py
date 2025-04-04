@@ -11,8 +11,29 @@ from scipy.stats import pearsonr
 from scipy.spatial.distance import pdist, squareform
 import sys
 import tensorflow_probability as tfp
+import gzip
 sns.set_palette('tab20c')
 plt.style.use('seaborn-white')
+
+# A small function to ensure proper header format for repeat file. 
+def read_gzipped_tsv(file_path):
+
+    # Define the header for the repeat file. 
+    repeat_header = ['#bin', 'swScore', 'milliDiv', 'milliDel', 'milliIns', 'genoName',
+                       'genoStart', 'genoEnd', 'genoLeft', 'strand', 'repName', 'repClass',
+                       'repFamily', 'repStart', 'repEnd', 'repLeft', 'id']
+
+    with gzip.open(file_path, 'rt') as f:
+        first_line = f.readline().strip()
+
+    # Check if the first line starts with the expected header's first column name
+    if first_line.startswith(repeat_header[0]):
+        # Header is present, load normally with compression specified
+        df = pd.read_csv(file_path, compression='gzip', header=0, sep = "\t")
+    else:
+        # Header is not present, load without header and assign expected column names
+        df = pd.read_csv(file_path, compression='gzip', header=None, names=repeat_header, sep = "\t")
+    return df
     
 def label_clusters_by_elbow(val, plot = False, ax = None, std = None):
     '''label clusters by model mean
@@ -264,7 +285,7 @@ if __name__ == '__main__':
     annotation_file = sys.argv[3]
 
     raw_counts_file = f'{basedir}/counts/repeats/megatables/name/{out_stem}.tsv.gz'
-    annotation = pd.read_csv(annotation_file, sep = '\t', index_col = 0)
+    annotation = read_gzipped_tsv(annotation_file)
     name2family = annotation.set_index('repName')['repFamily'].to_dict()
     name2class = annotation.set_index('repName')['repClass'].to_dict()
 

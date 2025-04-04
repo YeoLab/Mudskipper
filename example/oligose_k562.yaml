@@ -1,0 +1,53 @@
+MANIFEST: /tscc/nfs/home/kflanagan/scratch/mudskipper_test/ABC_k562.csv
+barcode_csv: /tscc/nfs/home/kflanagan/scratch/mudskipper_test/ABC_barcode.csv
+WORKDIR: /tscc/nfs/home/kflanagan/scratch/mudskipper_test/results
+
+# If available, can provide external background which will replace CC. 
+external_bam:
+
+FINEMAPPING: True
+
+# Specify which of the Dirichlet multinomial mixture (DMM) and beta-binomial mixture (BBM) models you want to run. 
+DMM: True
+BBM: True
+# Setting both parameters to false will result in pre-processing but no analysis. 
+SEED: 123
+
+# ADAPTOR_PATH: /projects/ps-yeolab4/software/eclip/0.7.0/examples/inputs
+# adaptor: InvRiL19
+adaptor_fwd: AGATCGGAAGAGCACACGTC
+tile_length: 10
+QUALITY_CUTOFF: 6
+
+# UMI_TOOLS
+umi_pattern: XXXXXNNNNN
+
+# Resources
+STAR_DIR: /tscc/projects/ps-yeolab3/bay001/annotations/GRCh38/star_2_7_gencode40_sjdb
+SCRIPT_PATH: /tscc/nfs/home/kflanagan/projects/Mudskipper/scripts
+
+# UMI colla[se]
+JAVA_PATH: /tscc/projects/ps-yeolab3/eboyle/software/jdk-18.0.1.1/bin/java
+UMICOLLAPSE_PATH: /tscc/projects/ps-yeolab3/eboyle/software/UMICollapse/umicollapse.jar
+
+# region caller
+PARTITION: /tscc/projects/ps-yeolab4/software/skipper/1.99.0/bin/skipper/annotations/gencode.v40.annotation.k562_totalrna.gt1.tiled_partition.bed.gz
+FEATURE_ANNOTATIONS: /tscc/projects/ps-yeolab4/software/skipper/1.99.0/bin/skipper/annotations/gencode.v40.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz
+ACCESSION_RANKINGS: /tscc/projects/ps-yeolab4/software/skipper/1.0.0/bin/skipper/annotations/accession_type_ranking.txt
+CHROM_SIZES: /tscc/projects/ps-yeolab3/bay001/annotations/GRCh38/GRCh38_no_alt_analysis_set_GCA_000001405.15.chrom.sizes
+GENOMEFA: /tscc/projects/ps-yeolab3/bay001/annotations/GRCh38/GRCh38_no_alt_analysis_set_GCA_000001405.15.fasta
+
+AS_INPUT:  # this must be one of the rows in barcode_csv
+R_EXE: /tscc/projects/ps-yeolab4/software/R-4.1.2/bin/Rscript
+REPEAT_TABLE: /tscc/projects/ps-yeolab3/eboyle/encode/pipeline/05_20220720/repeatmasker.grch38.tsv.gz
+
+trackhub_genome: GRCh38
+
+# Read type: Either "paired" for paired end or "single" for single end. 
+READ_TYPE: "single"
+# Single-end: enter 1. Paired-end: enter read (1 or 2) corresponding to crosslink site
+INFORMATIVE_READ: 1
+
+#
+RBP_TO_RUN_MOTIF:
+- RBFOX2

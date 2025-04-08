@@ -1,8 +1,0 @@
-name: piranha
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - piranha
-  - libcblas
-prefix: /tscc/nfs/home/hsher/miniconda3/envs/prianha

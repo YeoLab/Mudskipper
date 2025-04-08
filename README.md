@@ -2,24 +2,19 @@
 - [Link to original ABC paper](https://www.nature.com/articles/s41592-022-01708-8)
 
 # Installation
-There are 2 methods for installing/running mudskipper. A containerized version using singularity, and a more basic version using conda. We encourage users to adopt the Singularity version of Mudskipper because it streamlines setup by requiring only Singularity, STAR, Scipy, and Snakemake. For users without Singularity or superuser privileges, we provide an option for a purely conda based installation. 
 
-## Using Singularity
 - Download this repository using `git clone https://github.com/YeoLab/Mudskipper.git`.
-- Create a conda environment to run Mudskipper in.
+- Create a conda environment to run Mudskipper in (not needed for Yeolab internal users).
     - `conda create -n mudskipper_s snakemake==7.32.4 scipy==1.15.2 sra-tools==2.11.0 star==2.7.10b`
     - Note: Mudskipper depends on Snakemake version 7.3.8 to run, and is incompatible with Snakemake version > 8.
 - Singularity 3.11: [Singularity](https://docs.sylabs.io/guides/3.0/user-guide/build_a_container.html).
     - If setting up Mudskipper on a server/computing cluster, it is reccomended that you ask a system admin to install singularity. This is to prevent potential permission issues. 
     - It is also possible to install singularity via conda, though this is not reccomended: [install via conda](https://anaconda.org/conda-forge/singularity)
 
-## Using Conda
-Work in progress. 
-
 # How to run. (Using ABC-CLIP data from original paper as an example)
 
 ## Yeo lab internal example (only for Yeo lab members)
-Please see yeo_lab_internal.md (work in progress). 
+Please see yeo_lab_internal.md. 
 
 ## Example with singularity:
 1. Activate the conda environment.
@@ -29,10 +24,9 @@ Please see yeo_lab_internal.md (work in progress).
    - `fasterq-dump SRR19547041 -O path/to/save/data`
    - `cd path/to/save/data`
    - `gzip SRR19547040.fastq SRR19547041.fastq` 
-3. Prepare config file `example/example.yaml`. For this example, you should only have to edit two lines of the config:
-    - `REPO_PATH`: This must be changed to the absolute path to the Mudskipper repository that you cloned during the installation step. 
-    - `WORKDIR`: This must be changed to the absolute path to the directory where you want Mudskipper to save the results/intermediate files. 
-   When running Mudskipper with your own data, you will be required to edit more of the configuration.
+3. Prepare config file `example/example.yaml`. For this example, you should only have to mkae 2 major edits:
+    - all instances of `path/to/Mudskipper`: should be changed to the absolute path to the Mudskipper repository that you cloned during the installation step. 
+    - `path/to/workdir`: This must be changed to the absolute path to the directory where you want Mudskipper to save the results/intermediate files. 
 4. Prepare manifest file `example/example_manifest.csv`:
     - `fastq`: replace `path/to/` with the absolute path to the directory you saved the fastq files to in step 3.
 5. Download/create additional annotation files (must be done inside of Mudskipper's annotations folder).
@@ -55,10 +49,7 @@ Please see yeo_lab_internal.md (work in progress).
     - Add `-n` to the command in order to complete a dry run (sets up snakemake architecture without actually running). 
     - the rest of the options are in `--profile`.
       
-When running Mudskipper with your own data, you will be required to edit more of the configuration. Refer to the Configuration file section to learn what to include in your configuration.
-
-## Example with Conda:
-work in progress
+When running Mudskipper with your own data, you will be required to edit more of the configuration. Refer to the Configuration file section below to learn what to include in your configuration.
 
 # Configuration file:
 

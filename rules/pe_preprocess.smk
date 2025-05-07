@@ -95,7 +95,7 @@ rule trim_adaptor:
             {input.fq1} {input.fq2} > {output.metric}
         """
 
-rule extract_umi_and_trim_polyG: # TODO: adaptor TRIM first
+rule extract_umi_and_trim_polyG: 
 #fastp does not remove UMI from read2
     input:
         fq1 = rules.trim_adaptor.output.fq1,
@@ -152,10 +152,9 @@ rule trim_umi_from_read2:
         zcat {input.fq2} > {output.fq2_unzip}
         seqtk trimfq -e {params.umi_length} {output.fq2_unzip} | gzip > {output.fq2}
         """
-# reverse read1 and read2 cause ultraplex does not support 3' only demux
+# reverse read1 and read2 because ultraplex does not support 3' only demux
 # set adaptor to X to disable adaptor trimming
-# the pgzip thing is slow. always lead to incomplete file
-rule demultiplex: ################ never used the trimmed fastq file
+rule demultiplex: 
     input:
         fq1 = rules.extract_umi_and_trim_polyG.output.fq1,
         fq2 = rules.trim_umi_from_read2.output.fq2,
@@ -165,7 +164,6 @@ rule demultiplex: ################ never used the trimmed fastq file
         fq2=temp(expand("{libname}/fastqs/ultraplex_demux_{sample_label}_Fwd.fastq.gz", libname = ["{libname}"], sample_label = rbps)),
         missing_fq1="{libname}/fastqs/ultraplex_demux_5bc_no_match_Rev.fastq.gz",
         missing_fq2="{libname}/fastqs/ultraplex_demux_5bc_no_match_Fwd.fastq.gz",
-        # logs = "{libname}/barcode.log"
     conda:
         "envs/ultraplex.yaml"
     benchmark: "benchmarks/pre/demux.{libname}.txt"
@@ -180,7 +178,7 @@ rule demultiplex: ################ never used the trimmed fastq file
     shell:
         """
         cd {params.prefix}
-        # in case there is no not matched ones
+        # in case there are no not matched ones
         
         ultraplex -i all.Tr.umi.fq2.trim.gz -i2 all.Tr.umi.fq1.gz -b {input.barcode_csv}  \
             -m5 1 -m3 0 -t {params.cores} -a XX -a2 XX --ultra
@@ -192,7 +190,6 @@ rule demultiplex: ################ never used the trimmed fastq file
         """
 
 rule trim_barcode_r1:
-# ultraplex does not trim well for the other read
     input:
         fq1 = "{libname}/fastqs/ultraplex_demux_{sample_label}_Rev.fastq.gz", # has reverse complement of barcode at the end
         fq2 = "{libname}/fastqs/ultraplex_demux_{sample_label}_Fwd.fastq.gz",
@@ -234,7 +231,6 @@ rule fastqc_post_trim:
         fq1=rules.trim_barcode_r1.output.fq1,
         fq2=rules.trim_barcode_r1.output.fq2,
     output:
-        # PRPF8.umi.fqTrTr.rev.sorted_fastqc
         html1="{libname}/fastqc/ultraplex_demux_{sample_label}_Rev.Tr_fastqc.html",
         txt1="{libname}/fastqc/ultraplex_demux_{sample_label}_Rev.Tr_fastqc/fastqc_data.txt",
         html2="{libname}/fastqc/ultraplex_demux_{sample_label}_Fwd.Tr_fastqc.html",

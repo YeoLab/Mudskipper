@@ -113,7 +113,6 @@ rule demultiplex:
         fq=temp(expand("{libname}/fastqs/ultraplex_demux_{sample_label}.fastq.gz", 
             libname = ["{libname}"], sample_label = rbps)),
         missing_fq="{libname}/fastqs/ultraplex_demux_5bc_no_match.fastq.gz",
-        # logs = "{libname}/barcode.log"
     conda:
         "envs/ultraplex.yaml"
     benchmark: "benchmarks/pre/demux.{libname}.txt"

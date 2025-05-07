@@ -39,11 +39,11 @@ class Beta_Mixture_Model:
         return 1-self.cdf(k)
 
 if __name__=='__main__':
-    basedir = Path(sys.argv[1]) # internal_output/DMN
-    outstem = sys.argv[2] # K562_rep4.RBFOX2
+    basedir = Path(sys.argv[1]) 
+    outstem = sys.argv[2] 
     
     exp, rbp = outstem.split('.')
-    raw_counts = pd.read_csv(sys.argv[3], sep = '\t') # basedir/f'internal_output/counts/genome/bgtables/internal/{pre}.{rbp}.tsv.gz
+    raw_counts = pd.read_csv(sys.argv[3], sep = '\t') 
     annotation_df = pd.read_csv(sys.argv[4], sep = '\t')
     outdir = basedir
 
@@ -60,17 +60,17 @@ if __name__=='__main__':
     assert len(control_col)==1
     control_col = control_col[0]
 
-    # read files, weights of each component #pi
-    component_weights = pd.read_csv(basedir/f'{outstem}.weights.tsv', sep = '\t',index_col = 0)
+    # read files, weights of each component pi
+    component_weights = pd.read_csv(f'{basedir}/intermediates/{outstem}.weights.tsv', sep = '\t',index_col = 0)
     component_weights.index = ['X'+str(i) for i in component_weights.index]
 
     # alpha 
-    component_alpha = pd.read_csv(basedir/f'{outstem}.alpha.tsv', sep = '\t',index_col = 0)
+    component_alpha = pd.read_csv(f'{basedir}/intermediates/{outstem}.alpha.tsv', sep = '\t',index_col = 0)
     model_mean = component_alpha.div(component_alpha.sum(axis = 0), axis = 1)
 
     # E[z_ik]
     # weight of each window
-    data = pd.read_csv(basedir/f'{outstem}.mixture_weight.tsv', sep = '\t',index_col = 0)
+    data = pd.read_csv(f'{basedir}/intermediates/{outstem}.mixture_weight.tsv', sep = '\t',index_col = 0)
     data.rename({'Row.names':'name'}, inplace = True, axis = 1)
     to_rename = [c for c in data.columns if c.startswith('V')]
     new_name = [c.replace('V', 'X') for c in to_rename]
@@ -144,7 +144,7 @@ if __name__=='__main__':
         plt.suptitle(outstem)
         plt.tight_layout()
         sns.despine()
-        plt.savefig(outdir / f'{outstem}.model_output.pdf')
+        plt.savefig(f'{outdir}/plots/{outstem}.model_output.pdf')
         
         plt.show()
         
@@ -157,7 +157,7 @@ if __name__=='__main__':
         component_fc.columns = [f'fc.{c}' for c in component_fc.columns]
         metadata = pd.concat([component_fc, model_mean.T, component_alpha.T], axis = 1)
         metadata['selected'] = metadata.index.isin(comp)
-        metadata.to_csv(outdir / f'{outstem}.label_component.csv')
+        metadata.to_csv(f'{outdir}/intermediates/{outstem}.label_component.csv')
         
         bg_metadata = pd.concat([mapped_reads,mapped_reads_fraction], axis = 1)
         bg_metadata.columns = ['total_reads', 'fraction_reads']
@@ -166,7 +166,6 @@ if __name__=='__main__':
         
         print(f'''======== {outstem} has single component or no enriche comp
         , fall back to hypothesis testing========''')
-        #data = calculate_pvalue(raw_counts, outstem, component_alpha.iloc[:, ], annotation_df)
         # no enriched comp
         
         
@@ -198,8 +197,8 @@ if __name__=='__main__':
     print(f'Finish testing, found enriched_windows: ', enriched_windows.shape[0])
 
     # save raw output
-    results.to_csv(outdir / f'{outstem}.window_score.tsv', sep = '\t')
-    enriched_windows.to_csv(outdir / f'{outstem}.enriched_windows.tsv', sep = '\t')
+    results.to_csv(f'{outdir}/intermediates/{outstem}.window_score.tsv', sep = '\t')
+    enriched_windows.to_csv(f'{outdir}/{outstem}.enriched_windows.tsv', sep = '\t')
 
     # analysis
     fcount = results.groupby(by = 'enriched')['feature_type_top'].value_counts().unstack().fillna(0).T
@@ -226,7 +225,7 @@ if __name__=='__main__':
         ax[i,1].set_xlabel('Positive rate')
         sns.despine()
         plt.tight_layout()
-        plt.savefig(outdir / f'{outstem}.summaries.pdf')
+        plt.savefig(f'{outdir}/plots/{outstem}.summaries.pdf')
         plt.show()
         
         # classification by feature
@@ -243,7 +242,7 @@ if __name__=='__main__':
         pd.Series(clf.coef_[0], index = binary_df.columns).sort_values().plot.barh()
         plt.xlabel('Logistic Regression Coef')
         plt.tight_layout()
-        plt.savefig(outdir / f'{outstem}.feature_logistic.pdf')
+        plt.savefig(f'{outdir}/plots/{outstem}.feature_logistic.pdf')
         plt.show()
         
         from sklearn.linear_model import RidgeClassifier
@@ -255,7 +254,7 @@ if __name__=='__main__':
         pd.Series(clf.coef_[0], index = binary_df.columns).sort_values().plot.barh()
         plt.xlabel('Ridge Regression Coef')
         plt.tight_layout()
-        plt.savefig(outdir / f'{outstem}.feature_ridge.pdf')
+        plt.savefig(f'{outdir}/plots/{outstem}.feature_ridge.pdf')
         plt.show()
     else:
         print('Fitting probably has problem. Either all window is positive or all window is negative')

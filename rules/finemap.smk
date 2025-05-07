@@ -36,8 +36,7 @@ rule get_nt_coverage:
         """
 rule finemap_windows:
     input:
-        nt_coverage = "{root_dir}/finemapping/nt_coverage/{signal_type}/{libname}.{sample_label}.nt_coverage.bed",
-        # col_names = c("chr","start","end","name","score","strand","window_n","input","clip")        
+        nt_coverage = "{root_dir}/finemapping/nt_coverage/{signal_type}/{libname}.{sample_label}.nt_coverage.bed",      
     output:
         finemapped_windows = "{root_dir}/finemapping/mapped_sites/{signal_type}/{libname}.{sample_label}.finemapped_windows.bed.gz"
     params:
@@ -67,8 +66,8 @@ rule finemap_to_bedgraph:
     params:
         error_out_file = lambda wildcards: "error_files/bed2bedgraph."+wildcards.something.replace('/', '.')+".err",
         out_file = lambda wildcards: "stdout/bed2bedgraph."+wildcards.something.replace('/', '.')+".err",
-        run_time = "00:10:00",
-        memory = 10000,
+        run_time = "00:30:00",
+        memory = 16000,
         cores = 1,
     container: None
     shell:

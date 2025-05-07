@@ -1,0 +1,77 @@
+########################################
+# input files. 
+MANIFEST: /tscc/nfs/home/kflanagan/projects/Mudskipper/yeo_lab_internal_example/ABC_k562.csv
+barcode_csv: /tscc/nfs/home/kflanagan/projects/Mudskipper/yeo_lab_internal_example/ABC_barcode.csv
+
+# Path to location of Mudskipper run. 
+WORKDIR: /tscc/nfs/home/kflanagan/scratch/mudskipper_test/results
+
+# Path to location of Mudskipper scripts.
+SCRIPT_PATH: /tscc/nfs/home/kflanagan/projects/Mudskipper/scripts
+
+########################################
+# Background options
+
+# If available, can provide external background which will replace CC. 
+external_bam:
+# If available, can provide an IgG antibody/spike-in/bead-only control for the multiplex experiment to serve as background
+AS_INPUT:  # this must be one of the rows in barcode_csv
+
+########################################
+# Analysis options
+
+# Specify which of the Dirichlet multinomial mixture (DMM) and beta-binomial mixture (BBM) models you want to run. 
+DMM: True
+BBM: False
+# Setting both parameters to False will run the pre-processing with no further analysis. 
+
+# Specify if you want to run finemapping analysis. Required for motif analysis with Homer.  
+FINEMAPPING: True
+
+# Specify which RBPs to undergo motif analysis via Homer (if left blank, then no motif analysis conducted).
+# Requires finemapping. 
+RBP_TO_RUN_MOTIF:
+- RBFOX2
+
+# Read type: Either "paired" for paired end or "single" for single end. 
+READ_TYPE: "single"
+# Single-end: enter 1. Paired-end: enter read (1 or 2) corresponding to crosslink site
+INFORMATIVE_READ: 1
+
+# Specify the seed (ensures reproducible model fitting, can generally be left as default)
+SEED: 123
+
+########################################
+# Pre-processing options 
+
+# adapter sequence to trim. Do not include barcode
+adaptor_fwd: AGATCGGAAGAGCACACGTC
+adaptor_red: # Leave blank if doing single end reads. 
+
+# tile adapter sequences of this length
+tile_length: 10
+
+# cutadapt params.
+QUALITY_CUTOFF: 6
+
+# UMI_TOOLS
+umi_pattern: XXXXXNNNNN
+
+########################################
+# Annotation parameters
+
+# region caller
+
+# Repeat table
+REPEAT_TABLE: /tscc/projects/ps-yeolab3/eboyle/encode/pipeline/05_20220720/repeatmasker.grch38.tsv.gz
+# Genome fasta
+GENOMEFA: /tscc/projects/ps-yeolab3/bay001/annotations/GRCh38/GRCh38_no_alt_analysis_set_GCA_000001405.15.fasta
+# STAR reference
+STAR_DIR: /tscc/projects/ps-yeolab3/bay001/annotations/GRCh38/star_2_7_gencode40_sjdb
+# Generated from STAR index
+CHROM_SIZES: /tscc/projects/ps-yeolab3/bay001/annotations/GRCh38/GRCh38_no_alt_analysis_set_GCA_000001405.15.chrom.sizes
+
+# Skipper will partition the transcriptome and create feature annotations from the GFF
+PARTITION: /tscc/projects/ps-yeolab4/software/skipper/1.99.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.bed.gz
+FEATURE_ANNOTATIONS: /tscc/projects/ps-yeolab4/software/skipper/1.99.0/bin/skipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz
+

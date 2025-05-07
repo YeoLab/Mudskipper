@@ -1,0 +1,3 @@
+fastq,libname,experiment
+path/to/SRR19547040.fastq.gz,K562_rep4,K562
+path/to/SRR19547041.fastq.gz,K562_rep6,K562

@@ -26,7 +26,6 @@ all_windows[grepl("SS",all_windows$feature_types),"sampling_group"] = "SS"
 all_windows[grepl("EXON_LNCRNA|EXON_SMALL",all_windows$feature_types),"sampling_group"] = "EXON_NC"
 all_windows[grepl("EXON_MRNA",all_windows$feature_types),"sampling_group"] = "EXON_MRNA"
 
-# Aim to select at least 20000 windows for matched background
 sampling_factor = 1 + as.integer(20000 / nrow(enriched_windows))
 
 # Randomly sample region matched bins

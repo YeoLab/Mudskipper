@@ -1,0 +1,76 @@
+########################################
+# input files. 
+MANIFEST: "path/to/Mudskipper/example/example_manifest"
+barcode_csv: "path/to/Mudskipper/example/example_manifest"
+
+# Path to location of Mudskipper run. 
+WORKDIR: "path/to/workdir"
+
+# Path to location of Mudskipper scripts.
+SCRIPT_PATH: "path/to/Mudskipper/scripts"
+
+########################################
+# Background options
+
+# If available, can provide external background which will replace CC. 
+external_bam:
+# If available, can provide an IgG antibody/spike-in/bead-only control for the multiplex experiment to serve as background
+AS_INPUT:  # this must be one of the rows in barcode_csv
+
+########################################
+# Analysis options
+
+# Specify which of the Dirichlet multinomial mixture (DMM) and beta-binomial mixture (BBM) models you want to run. 
+DMM: True
+BBM: False
+# Setting both parameters to False will run the pre-processing with no further analysis. 
+
+# Specify if you want to run finemapping analysis. Required for motif analysis with Homer.  
+FINEMAPPING: True
+
+# Specify which RBPs to undergo motif analysis via Homer (if left blank, then no motif analysis conducted).
+# Requires finemapping. 
+RBP_TO_RUN_MOTIF:
+- RBFOX2
+
+# Read type: Either "paired" for paired end or "single" for single end. 
+READ_TYPE: "single"
+# Single-end: enter 1. Paired-end: enter read (1 or 2) corresponding to crosslink site
+INFORMATIVE_READ: 1
+
+# Specify the seed (ensures reproducible model fitting, can generally be left as default)
+SEED: 123
+
+########################################
+# Pre-processing options 
+
+# adapter sequence to trim. Do not include barcode
+adaptor_fwd: AGATCGGAAGAGCACACGTC
+adaptor_red: # Leave blank if doing single end reads. 
+
+# tile adapter sequences of this length
+tile_length: 10
+
+# cutadapt params.
+QUALITY_CUTOFF: 6
+
+# UMI_TOOLS
+umi_pattern: XXXXXNNNNN
+
+########################################
+# Annotation parameters
+
+# region caller
+
+# Repeat table
+REPEAT_TABLE: "path/to/Mudskipper/annotations/repeatmasker.grch38.tsv.gz"
+# Genome fasta
+GENOMEFA: "path/to/Mudskipper/annotations/GRCh38/GRCh38_no_alt_analysis_set_GCA_000001405.15.fasta"
+# STAR reference
+STAR_DIR: "path/to/Mudskipper/annotations/genome_ref" 
+# Generated from STAR index
+CHROM_SIZES: "path/to/Mudskipper/annotations/GRCh38/GRCh38_no_alt_analysis_set_GCA_000001405.15.chrom.sizes"
+
+# Skipper will partition the transcriptome and create feature annotations from the GFF
+PARTITION: "path/to/Mudskipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.bed.gz"
+FEATURE_ANNOTATIONS: "path/to/Mudskipper/annotations/gencode.v38.annotation.k562_totalrna.gt1.tiled_partition.features.tsv.gz"

@@ -1,8 +1,0 @@
-name: homer
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
-dependencies:
-  - homer
-prefix: /tscc/nfs/home/hsher/miniconda3/envs/homer

@@ -4,7 +4,7 @@
 2. Downloading additional data is not necessary. 
 3. Load the mudskipper module (replaces activating the conda environment):
     - `module load mudskipper`
-4. Prepare config file `example/example.yaml`. For this example, you should only have to edit two lines of the config.
+4. Prepare config file `yeo_lab_internal_example/oligose_k562.yaml`. For this example, you should only have to edit two lines of the config.
     - `WORKDIR`: Please change the value of the WORKDIR to a path somewhere in your own scratch folder. 
     - Please change all instances of `/tscc/nfs/home/kflanagan/projects/Mudskipper` to the absolute path to the Mudskipper repository that you cloned during the installation step. (Note, later versions of this example will just direct you to the module installation of mudskipper)
 5. Downloading additional annotation files is not necessary. 

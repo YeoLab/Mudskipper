@@ -1,6 +1,6 @@
 ########################################
 # input files. 
-MANIFEST: /tscc/nfs/home/kflanagan/projects/Mudskipper/yeo_lab_internal_example/ABC_k562.csv
+MANIFEST: /tscc/nfs/home/kflanagan/projects/Mudskipper/yeo_lab_internal_example/ABC_manifest.csv
 barcode_csv: /tscc/nfs/home/kflanagan/projects/Mudskipper/yeo_lab_internal_example/ABC_barcode.csv
 
 # Path to location of Mudskipper run. 
